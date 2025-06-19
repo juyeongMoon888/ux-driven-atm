@@ -63,3 +63,4 @@ out/
 
 # 기타
 HELP.md
+src/main/resources/application.yml
