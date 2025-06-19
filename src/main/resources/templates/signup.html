@@ -9,6 +9,17 @@
 <h2 class="mb-4">회원가입</h2>
 
 <form th:action="@{/signup}" method="post" th:object="${user}" class="row g-3">
+
+    <div class="col-md-6">
+        <label for="userId" class="form-label">아이디</label>
+        <input type="text" id="userId" th:field="*{userId}" class="form-control" required/>
+    </div>
+
+    <div class="col-md-6">
+        <label for="password" class="form-label">비밀번호</label>
+        <input type="text" id="password" th:field="*{password}" class="form-control" required/>
+    </div>
+
     <div class="col-md-6">
         <label for="name" class="form-label">이름</label>
         <input type="text" id="name" th:field="*{name}" class="form-control" required/>
