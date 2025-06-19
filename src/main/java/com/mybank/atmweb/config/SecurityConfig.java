@@ -26,7 +26,7 @@ public class SecurityConfig {
                 )
                 .formLogin((form) -> form
                         .loginPage("/login") //커스텀 로그인 페이지 경로
-                        .defaultSuccessUrl("/", true)
+                        .defaultSuccessUrl("/", false)
                         .failureHandler(customLoginFailureHandler)
                         .permitAll()
                 )
