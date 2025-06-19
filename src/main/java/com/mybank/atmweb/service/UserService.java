@@ -17,9 +17,11 @@ public class UserService {
         User user = new User();
         user.setLoginId(form.getLoginId());
         user.setPassword(form.getPassword());
+        user.setName(form.getName());
+        user.setResidentNumber(form.getResidentNumber());
         user.setGender(form.getGender());
         user.setPhoneNumber(form.getPhoneNumber());
-        user.setResidentNumber(form.getResidentNumber());
+
         userRepository.save(user);
     }
 }
