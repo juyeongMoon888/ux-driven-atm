@@ -17,7 +17,7 @@ public class ATMController {
 
     @PostMapping("/login")
     public ResponseEntity<String> login(@RequestBody LoginRequest dto) {
-        User user = atmService.login(dto.getResidentNumber(), dto.getPassword());
+        User user = atmService.login(dto.getLoginId(), dto.getPassword());
         return ResponseEntity.ok("로그인 성공" + user.getName());
     }
 }
