@@ -1,5 +1,7 @@
 package com.mybank.atmweb.config;
 
+import com.mybank.atmweb.handler.CustomLoginFailureHandler;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -12,6 +14,8 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 public class SecurityConfig {
+    @Autowired
+    private CustomLoginFailureHandler customLoginFailureHandler;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -23,6 +27,7 @@ public class SecurityConfig {
                 .formLogin((form) -> form
                         .loginPage("/login") //커스텀 로그인 페이지 경로
                         .defaultSuccessUrl("/", true)
+                        .failureHandler(customLoginFailureHandler)
                         .permitAll()
                 )
                 .logout((logout) -> logout
@@ -32,6 +37,7 @@ public class SecurityConfig {
     }
 
     //테스트용 인메모리 사용자 계정 설정
+    //데이터베이스가 아닌 메모리에 하드코딩된 사용자 정보만 로그인 대상
     @Bean
     public InMemoryUserDetailsManager userDetailsService(PasswordEncoder passwordEncoder) {
         UserDetails user = User.withUsername("user")

@@ -21,9 +21,9 @@
     <span>계정이 없으신가요?</span>
     <a href="/signup" class="btn btn-outline-primary btn-sm ms-2">회원가입</a>
 </div>
-
-
-
-
+<div th:if="${param.error}">
+    <p th:if="${param.error[0] == 'badcreditals'}">아이디 또는 비밀번호가 틀렸습니다.</p>
+    <p th:if="${param.error[0] == 'nouser'}">존재하지 않는 계정입니다.</p>
+</div>
 </body>
 </html>
