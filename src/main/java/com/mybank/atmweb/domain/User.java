@@ -11,7 +11,7 @@ public class User {
     @Id
     @GeneratedValue
     private Long id;
-
+    
     private String name; //이름
     private String cardPw; //카드 비밀번호 (암호화 할것)
     private String gender; //성별
