@@ -6,10 +6,9 @@ import com.mybank.atmweb.repository.UserRepository;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -39,6 +38,13 @@ public class AuthApiController {
 
         return ResponseEntity.ok("로그인 성공");
     }
+
+    @GetMapping("/check-id")
+    public ResponseEntity<?> checkId(@RequestParam String loginId) {
+        boolean isAvailable = !userRepository.existsByLoginId(loginId);
+        return ResponseEntity.ok(Map.of("available", isAvailable));
+    }
+
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpSession session) {
