@@ -44,7 +44,7 @@ public class MainController {
     //회원가입 완료 후 대시보드
     @PostMapping("/signup")
     public String signupSubmit(@ModelAttribute SignupForm form, HttpSession httpSession) {
-        userService.registerUser(form);
+        userService.signup(form);
         return "redirect:/login";
     }
 
