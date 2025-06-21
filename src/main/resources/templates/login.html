@@ -14,11 +14,7 @@
 
             <div class="mb-3">
                 <label for="loginId" class="form-label">아이디</label>
-                <div classs="input-group">
-                    <input type="text" id="loginId" class="form-control" placeholder="아이디를 입력하세요" required/>
-                    <button type="button" class="btn btn-outline-secondary" onclick="checkLoginId()">중복 확인</button>
-                </div>
-                <div id="id-check-result" class="form-text text-danger mt-1"></div>
+                <input type="text" id="loginId" class="form-control" placeholder="아이디를 입력하세요" required/>
             </div>
 
             <div class="mb-3">
@@ -37,8 +33,34 @@
 <div class="text-center mt-3">
     <span>계정이 없으신가요?</span>
     <a href="/signup" class="btn btn-outline-primary btn-sm ms-2">회원가입</a>
-</div>89
-<!--JS 연결 -->
-<script src = "/js/login.js"></script>
+</div>
+
+<script>
+    function login() {
+    const loginId = document.getElementById("loginId").value;
+    const password = document.getElementById("password").value;
+
+    fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ loginId, password })
+    })
+    .then(res => {
+        if (!res.ok) {
+            return res.json().then(data => {
+                throw new Error(data.error || "로그인 실패");
+            });
+        }
+        return res.text();
+    })
+    .then(() => {
+        window.location.href = "/";
+    })
+    .catch(err => {
+        document.getElementById("error-msg").innerText = err.message;
+    });
+}
+
+</script>
 </body>
 </html>
