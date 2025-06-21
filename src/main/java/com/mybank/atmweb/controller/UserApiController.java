@@ -13,7 +13,7 @@ import java.util.Map;
 @RequestMapping("/api/users")
 public class UserApiController {
 
-    private UserService userService;
+    private final UserService userService;
 
     //회원가입 아이디 중복확인
     @GetMapping("check-id")
