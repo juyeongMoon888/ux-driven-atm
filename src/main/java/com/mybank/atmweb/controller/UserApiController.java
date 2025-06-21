@@ -3,6 +3,7 @@ package com.mybank.atmweb.controller;
 import com.mybank.atmweb.dto.SignupForm;
 import com.mybank.atmweb.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,6 +30,8 @@ public class UserApiController {
     @PostMapping("/signup")
     public ResponseEntity<?> signup(@RequestBody SignupForm form) {
         userService.signup(form);
-        return ResponseEntity.ok().build();
+        return ResponseEntity
+                .ok(Map.of("message", "회원가입이 완료되었습니다."));
+
     }
 }
