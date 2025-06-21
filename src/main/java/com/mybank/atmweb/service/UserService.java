@@ -17,7 +17,7 @@ public class UserService {
     }
 
     public void signup(SignupForm form) {
-        //아이디 중복 체크
+        //아이디 중복 확인 버튼과 별개로 아이디 중복 체크
         if (userRepository.existsByLoginId(form.getLoginId())) {
             throw new IllegalArgumentException("이미 사용 중인 아이디입니다.");
         }
@@ -32,5 +32,9 @@ public class UserService {
         user.setPhoneNumber(form.getPhoneNumber());
 
         userRepository.save(user);
+    }
+    //아이디 중복 확인
+    public boolean isLoginIdAvailable(String loginId) {
+        return !userRepository.existsByLoginId(loginId);
     }
 }
