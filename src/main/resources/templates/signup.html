@@ -54,41 +54,48 @@
 </div>
 <script>
     function submitSignup() {
-const formElement = document.getElementById("signupForm");
+    console.log("submitSignup() 실행됨");
+        const formElement = document.getElementById("signupForm");
 
-if(formElement.dataset.idChecked !== "true") {
-alert("아이디 중복 확인을 먼저 해주세요.");
-return;
-}
-const user = {
-loginId: document.getElementById('loginId').value,
-password: document.getElementById('password').value,
-name: document.getElementById('name').value,
-residentNumber: document.getElementById('residentNumber').value,
-gender: document.getElementById('gender').value,
-phoneNumber: document.getElementById('phoneNumber').value
-};
-fetch('/api/signup', {
-method: 'POST',
-headers: {
-'Content-Type': 'application/json'
-},
-body: JSON.stringify(user)
-})
-.then(res => {
-if (res.ok) {
-alert("회원가입이 완료되었습니다. 로그인해주세요.");
-window.location.href = "/login"; //로그인 페이지로 이동
-} else {
-return res.json().then(data => {
-alert(data.message || "회원가입 실패");
-});
-}
-})
-.catch(err => {
-console.error(err);
-alert('서버 오류가 발생했습니다.');
-});
+    if(formElement.dataset.idChecked !== "true") {
+        alert("아이디 중복 확인을 먼저 해주세요.");
+        return;
+    }
+    const user = {
+        loginId: document.getElementById('loginId').value,
+        password: document.getElementById('password').value,
+        name: document.getElementById('name').value,
+        residentNumber: document.getElementById('residentNumber').value,
+        gender: document.getElementById('gender').value,
+        phoneNumber: document.getElementById('phoneNumber').value
+    };
+    fetch('/api/users/signup', {
+        method: 'POST',
+        headers: {
+        'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(user)
+    })
+    .then(res => {
+        return res.text().then(text => {
+            let data;
+            try {
+                data = text ? JSON.parse(text) : null;
+            } catch (e) {
+                console.warn("JSON 파싱 실패:", e);
+            }
+            if (res.ok) {
+                alert(data?.message || "회원가입이 완료되었습니다. 로그인해주세요");
+                window.location.href = "/login";
+            } else {
+                alert(data?.message || "회원가입 실패");
+            }
+        });
+    })
+    .catch(err => {
+        console.error(err);
+        alert('서버 오류가 발생했습니다.');
+    });
 }
 
 //아이디 중복 확인 메서드
