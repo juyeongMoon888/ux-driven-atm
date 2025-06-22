@@ -3,6 +3,7 @@ package com.mybank.atmweb.controller;
 import com.mybank.atmweb.domain.User;
 import com.mybank.atmweb.dto.LoginRequest;
 import com.mybank.atmweb.repository.UserRepository;
+import com.mybank.atmweb.security.JwtUtil;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -15,15 +16,16 @@ import java.util.Map;
 public class AuthApiController {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtUtil jwtUtil;
 
-
-    public AuthApiController(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public AuthApiController(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtUtil = jwtUtil;
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest request, HttpSession session) {
+    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         // 1. 아이디로 사용자 조회
         User user = userRepository.findByLoginId(request.getLoginId())
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 사용자입니다."));
@@ -33,12 +35,12 @@ public class AuthApiController {
             throw new RuntimeException("비밀번호가 일치하지 않습니다.");
         }
 
-        //3. 로그인 성공 -> 세션에 사용자 정보 저장
-        session.setAttribute("loginUser", user);
+        //3. JWT 토큰 발급
+        String token = jwtUtil.createToken(user.getId(), user.getRole().name());
 
-        return ResponseEntity.ok("로그인 성공");
+        //4. 토큰을 응답에 담아서 클라이언트에게 전달
+        return ResponseEntity.ok(Map.of("token", token));
     }
-
 
 
     @PostMapping("/logout")
