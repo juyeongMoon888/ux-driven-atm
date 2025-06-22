@@ -6,10 +6,32 @@
 <body>
 <h1>ATM 시스템</h1>
 
-<!--로그인 버튼 -->
-<button onclick="location.href='/login'">로그인</button>
+<!--로그인/로그아웃 버튼 -->
+<button id ="loginBtn" onclick="location.href='/login'">로그인</button>
+<button id="logoutBtn" style="display:none;">로그아웃</button>
+
 <!--입출금 버튼 -->
 <button onclick="location.href='/banking'">입출금</button>
 
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const token = localStorage.getItem("token");
+        const loginBtn = document.getElementById("loginBtn");
+        const logoutBtn = document.getElementById("logoutBtn");
+
+        if (token) {
+            loginBtn.style.display = "none";
+            logoutBtn.style.display = "block";
+        } else {
+            loginBtn.style.display = "block";
+            logoutBtn.style.display = "none";
+        }
+
+        logoutBtn.addEventListener("click", () => {
+            localStorage.removeItem("token");
+            location.reload();
+        });
+    });
+</script>
 </body>
 </html>
