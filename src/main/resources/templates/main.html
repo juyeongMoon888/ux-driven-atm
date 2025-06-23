@@ -18,6 +18,7 @@
         const token = localStorage.getItem("token");
         const loginBtn = document.getElementById("loginBtn");
         const logoutBtn = document.getElementById("logoutBtn");
+        const greetingEl = document.getElementById("greeting");
 
         if (token) {
             loginBtn.style.display = "none";
@@ -28,11 +29,28 @@
                     Authorization: "Bearer " + token
                 }
             })
-            .then(res => res.json())
+            .then(res => {
+                if (!res.ok) {
+                    if (res.status === 401) {
+                        localStorage.removeItem("token");
+                        alert("세션이 만료되었습니다. 다시 로그인해주세요.");
+                        console.log("401 상태 감지됨 - 로그인 페이지로 이동 예정");
+                        //location.href = "/login.html";
+                    }
+                    throw new Error ("토큰이 만료되었거나 유효하지 않습니다.");
+                }
+                return res.json();
+            })
             .then(data => {
-                document.getElementById("greeting").textContent = `안녕하세요, ${data.name}님`;
+                if (greetingEl) {
+                    greetingEl.textContent = `안녕하세요, ${data.name}님`;
+                }
+            })
+            .catch(err => {
+                console.warn(err.message);
+                localStorage.removeItem("token");
+                location.reload();
             });
-
         } else {
             loginBtn.style.display = "block";
             logoutBtn.style.display = "none";
