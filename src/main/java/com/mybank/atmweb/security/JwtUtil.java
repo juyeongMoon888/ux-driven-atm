@@ -16,9 +16,9 @@ public class JwtUtil {
     private static final Key SECRET_KEY = Keys.hmacShaKeyFor(SECRET.getBytes()); //최소 32바이트 이상
     private static final long EXPIRATION_TIME = 1000 * 60 * 60;//1시간
 
-    public String createToken(Long userId, String role) {
+    public String createToken(Long id, String role) {
         return Jwts.builder()
-                .setSubject(String.valueOf(userId))
+                .setSubject(String.valueOf(id))
                 .claim("role", role)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
