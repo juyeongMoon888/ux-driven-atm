@@ -39,13 +39,13 @@ public class UserApiController {
     }
 
     //사용자 정보
-    @GetMapping("/api/user/me")
+    @GetMapping("/me")
     public ResponseEntity<?> getMyInfo(@RequestHeader("Authorization") String bearerToken) {
         String token = bearerToken.replace("Bearer ", "");
         Claims claims = jwtUtil.parseToken(token);
-        String loginId = claims.getSubject(); //로그인 ID 추출
+        Long id = Long.valueOf(claims.getSubject()); //로그인 ID 추출
 
-        User user = userService.findByLoginId(loginId);
+        User user = userService.findById(id);
         return ResponseEntity.ok(Map.of("name", user.getName()));
     }
 }
