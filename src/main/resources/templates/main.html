@@ -5,7 +5,7 @@
 </head>
 <body>
 <h1>ATM 시스템</h1>
-
+<p id="greeting"></p>
 <!--로그인/로그아웃 버튼 -->
 <button id ="loginBtn" onclick="location.href='/login'">로그인</button>
 <button id="logoutBtn" style="display:none;">로그아웃</button>
@@ -22,6 +22,17 @@
         if (token) {
             loginBtn.style.display = "none";
             logoutBtn.style.display = "block";
+
+            fetch("/api/users/me",  {
+                headers: {
+                    Authorization: "Bearer " + token
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById("greeting").textContent = `안녕하세요, ${data.name}님`;
+            });
+
         } else {
             loginBtn.style.display = "block";
             logoutBtn.style.display = "none";
