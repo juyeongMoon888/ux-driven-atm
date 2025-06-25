@@ -1,11 +1,12 @@
 package com.mybank.atmweb.domain;
 
 import jakarta.persistence.*;
+import jakarta.transaction.Transactional;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter @Setter
-@Entity
+@Entity @Transactional
 @Table(name = "member")
 public class User {
     @Id
