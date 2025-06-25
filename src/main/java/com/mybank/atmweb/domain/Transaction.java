@@ -1,10 +1,11 @@
 package com.mybank.atmweb.domain;
 
 import jakarta.persistence.*;
+import jakarta.transaction.Transactional;
 
 import java.time.LocalDateTime;
 
-@Entity
+@Entity @Transactional
 public class Transaction {
     @Id @GeneratedValue
     private Long id;
