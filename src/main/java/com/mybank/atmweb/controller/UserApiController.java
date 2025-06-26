@@ -2,12 +2,14 @@ package com.mybank.atmweb.controller;
 
 import com.mybank.atmweb.domain.User;
 import com.mybank.atmweb.dto.SignupForm;
+import com.mybank.atmweb.security.CustomUserDetails;
 import com.mybank.atmweb.security.JwtUtil;
 import com.mybank.atmweb.service.UserService;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -40,12 +42,9 @@ public class UserApiController {
 
     //사용자 정보
     @GetMapping("/me")
-    public ResponseEntity<?> getMyInfo(@RequestHeader("Authorization") String bearerToken) {
-        String token = bearerToken.replace("Bearer ", "");
-        Claims claims = jwtUtil.parseToken(token);
-        Long id = Long.valueOf(claims.getSubject()); //로그인 ID 추출
-
-        User user = userService.findById(id);
-        return ResponseEntity.ok(Map.of("name", user.getName()));
+    public ResponseEntity<?> getMyInfo(Authentication authentication) {
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        String name = userDetails.getUsername();
+        return ResponseEntity.ok(Map.of("name", name));
     }
 }
