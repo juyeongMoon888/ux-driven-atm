@@ -16,6 +16,7 @@ public class JwtUtil {
     private static final Key SECRET_KEY = Keys.hmacShaKeyFor(SECRET.getBytes()); //최소 32바이트 이상
     private static final long EXPIRATION_TIME = 1000 * 60 * 60;//1시간
 
+    //	로그인 성공 시 JWT 생성
     public String createToken(Long id, String role) {
         return Jwts.builder()
                 .setSubject(String.valueOf(id))
@@ -26,6 +27,7 @@ public class JwtUtil {
                 .compact();
     }
 
+    //	필터에서 들어온 요청의 JWT 해석
     public Claims parseToken(String token) {
         return Jwts.parser()
                 .setSigningKey(SECRET_KEY)
