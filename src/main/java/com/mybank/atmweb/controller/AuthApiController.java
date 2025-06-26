@@ -38,7 +38,7 @@ public class AuthApiController {
         //3. JWT 토큰 발급
         String token = jwtUtil.createToken(user.getId(), user.getRole().name());
 
-        //4. 토큰을 응답에 담아서 클라이언트에게 전달
+        //4. 토큰을 JSON 바디로 응답
         return ResponseEntity.ok(Map.of("token", token));
     }
 
