@@ -20,11 +20,39 @@
         const logoutBtn = document.getElementById("logoutBtn");
         const greetingEl = document.getElementById("greeting");
 
+        // UI 초기화 함수
+        function resetUIToLoggedOut() {
+            loginBtn.style.display = "block";
+            logoutBtn.style.display = "none";
+            if (greetingEl) greetingEl.textContent = "";
+            localStorage.removeItem("token");
+        }
+
+        // 서버 복구 확인 루프
+        function waitForServerRecovery() {
+            const interval = setInterval(() => {
+                fetch("/api/ping")
+                    .then(res => {
+                        if (res.ok) {
+                            console.log("서버 복구됨, 토큰 제거 시도");
+                            clearInterval(interval);
+                            localStorage.removeItem("token");
+                            alert("서버가 다시 연결되었습니다. 로그인 페이지로 이동합니다.");
+                            location.href = "/login";
+                        }
+                    })
+                    .catch(() => {
+                        // 서버 아직 죽어있으면 아무것도 안 함
+                    });
+            }, 5000);
+        }
+
+        // 인증된 상태일 때 사용자 정보 요청
         if (token) {
             loginBtn.style.display = "none";
             logoutBtn.style.display = "block";
 
-            fetch("/api/users/me",  {
+            fetch("/api/users/me", {
                 headers: {
                     Authorization: "Bearer " + token
                 }
@@ -32,11 +60,10 @@
             .then(res => {
                 if (!res.ok) {
                     if (res.status === 401) {
-                        localStorage.removeItem("token");
-                        alert("세션이 만료되었습니다. 다시 로그인해주세요.");
-                        location.href = "/login.html";
+                        throw new Error("UNAUTHORIZED");
+                    } else {
+                        throw new Error("SERVER_ERROR");
                     }
-                    throw new Error ("토큰이 만료되었거나 유효하지 않습니다.");
                 }
                 return res.json();
             })
@@ -46,11 +73,34 @@
                 }
             })
             .catch(err => {
-                console.warn(err.message);
-                localStorage.removeItem("token");
-                location.reload();
+                console.warn("❗ 사용자 정보 요청 실패:", err.message);
+                resetUIToLoggedOut();
+
+                if (err.message === "UNAUTHORIZED") {
+                    alert("세션이 만료되었습니다. 다시 로그인해주세요.");
+                    location.href = "/login";
+                } else {
+                    alert("서버가 꺼졌습니다. 복구를 기다립니다...");
+                    waitForServerRecovery(); // 서버 꺼졌을 때만 감시 시작
+                }
             });
+
+            //로그인 상태일 때 서버 주기적 감시
+            setInterval(() => {
+                fetch("/api/users/me", {
+                    headers: {
+                        Authorization: "Bearer " + localStorage.getItem("token")
+                    }
+                })
+                .catch(() => {
+                    console.warn("서버 나중에 꺼짐 감지됨");
+                    resetUIToLoggedOut();
+                    alert("서버 연결이 끊어졌습니다. 로그인 페이지로 이동합니다.");
+                    location.href = "/login";
+                });
+            }, 5000);
         } else {
+            // 로그인 안 된 상태
             loginBtn.style.display = "block";
             logoutBtn.style.display = "none";
         }
