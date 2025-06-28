@@ -14,10 +14,15 @@ public class Account {
     @Id @GeneratedValue
     private Long id;
 
+    private String accountNumber;
+
+    @Enumerated(EnumType.STRING)
+    private Bank bank;
+
     private int balance;
 
-    @OneToOne
-    @JoinColumn(name = "user_id")
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;//관계의 주인, DB 반영
 
     public void deposit(int amount) {
