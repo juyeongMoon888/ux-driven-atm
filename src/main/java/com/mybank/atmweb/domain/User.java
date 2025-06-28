@@ -5,6 +5,9 @@ import jakarta.transaction.Transactional;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Getter @Setter
 @Entity @Transactional
 @Table(name = "member")
@@ -26,7 +29,7 @@ public class User {
     @Column(nullable = false)
     private Role role = Role.USER;
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL) //jakarta.persistence 가 표준임
-    private Account account;
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL) //jakarta.persistence 가 표준임
+    private List<Account> accounts = new ArrayList<>();
 
 }
