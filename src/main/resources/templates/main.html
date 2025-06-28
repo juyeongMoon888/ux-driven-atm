@@ -11,7 +11,7 @@
 <button id="logoutBtn" style="display:none;">로그아웃</button>
 
 <!--입출금 버튼 -->
-<button onclick="location.href='/banking'">입출금</button>
+<button id="bankingBtn" onclick="location.href='/banking'">입출금</button>
 
 <script>
     document.addEventListener("DOMContentLoaded", () => {
@@ -19,6 +19,19 @@
         const loginBtn = document.getElementById("loginBtn");
         const logoutBtn = document.getElementById("logoutBtn");
         const greetingEl = document.getElementById("greeting");
+
+        const bankingBtn = document.getElementById("bankingBtn");
+        if (bankingBtn) {
+            bankingBtn.addEventListener("click", () => {
+                const currentToken = localStorage.getItem("token");
+                if (!currentToken) {
+                    alert("로그인이 필요합니다.");
+                    location.href = "/login";
+                } else {
+                    location.href = "/banking";
+                }
+            })
+        }
 
         // UI 초기화 함수
         function resetUIToLoggedOut() {
@@ -45,6 +58,23 @@
                         // 서버 아직 죽어있으면 아무것도 안 함
                     });
             }, 5000);
+        }
+
+        function tryOnceToDetectRecovery() {
+            setTimeout(() => {
+                fetch("/api/ping")
+                    .then(res => {
+                        if (res.ok) {
+                        localStorage.removeItem("token");
+                        location.reload();
+
+                        }
+                    })
+                    .catch(() => {
+                        // 실패 시 아무 행동 안 함 (복구 안 된 상태)
+                        console.warn("서버 여전히 꺼져 있음");
+                    });
+            }, 5000); // 5초 후 한 번만 시도
         }
 
         // 인증된 상태일 때 사용자 정보 요청
@@ -81,24 +111,11 @@
                     location.href = "/login";
                 } else {
                     alert("서버가 꺼졌습니다. 복구를 기다립니다...");
-                    waitForServerRecovery(); // 서버 꺼졌을 때만 감시 시작
+                    tryOnceToDetectRecovery(); // 서버 꺼졌을 때만 감시 시작
                 }
             });
 
-            //로그인 상태일 때 서버 주기적 감시
-            setInterval(() => {
-                fetch("/api/users/me", {
-                    headers: {
-                        Authorization: "Bearer " + localStorage.getItem("token")
-                    }
-                })
-                .catch(() => {
-                    console.warn("서버 나중에 꺼짐 감지됨");
-                    resetUIToLoggedOut();
-                    alert("서버 연결이 끊어졌습니다. 로그인 페이지로 이동합니다.");
-                    location.href = "/login";
-                });
-            }, 5000);
+
         } else {
             // 로그인 안 된 상태
             loginBtn.style.display = "block";
