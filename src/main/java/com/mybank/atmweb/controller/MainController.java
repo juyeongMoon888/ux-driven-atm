@@ -39,4 +39,10 @@ public class MainController {
     public String signupForm() {
         return "signup";
     }
+
+    //입출금 페이지
+    @GetMapping("/banking")
+    public String bankingPage() {
+        return "banking";
+    }
 }
