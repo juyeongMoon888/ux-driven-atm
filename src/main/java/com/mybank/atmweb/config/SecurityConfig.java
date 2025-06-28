@@ -30,9 +30,23 @@ public class SecurityConfig {
                 .csrf(csrf->csrf.disable())
 
                 .authorizeHttpRequests((authz) -> authz
-                        .requestMatchers("/", "/login", "/signup", "/api/**", "/api/users/**","/css/**", "/js/**")
-                        .permitAll() //메인 페이지 접근 허용
-                        .anyRequest().authenticated()
+                        .requestMatchers(
+                                "/",
+                                "/login",
+                                "/signup",
+                                "/banking",
+                                "/api/auth/**",
+                                "/api/ping",
+                                "/api/users/**",
+                                "/css/**",
+                                "/js/**")
+                        .permitAll() //메인 페이지 접근 허용 (비로그인 허용)
+                        .requestMatchers("/atm/**").authenticated() //로그인 필요
+                        .anyRequest().denyAll()
+                )
+                .formLogin(login -> login
+                        .loginPage("/login")//로그인 안 되어 있으면 리디렉션
+                        .permitAll()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class); //필터 등록
                 return http.build();
