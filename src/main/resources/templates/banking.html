@@ -45,7 +45,13 @@
             return res.json();
         })
         .then(data => {
-            if (!data) return;
+            if (!data) {
+                document.getElementById("accountSelect").style.display = "none";
+                document.getElementById("balanceBtn").style.display = "none";
+                document.getElementById("depositBtn").style.display = "none";
+                document.getElementById("withdrawBtn").style.display = "none";
+                return;
+            }
             accountInfoEl.innerHTML = `
                 <p> 계좌: ${data.accountNumber}</p>
                 <p> 잔액: ${data.balance.toLocaleString()}원</p>
