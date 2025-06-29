@@ -26,15 +26,19 @@
         const createBtn = document.getElementById("createAccountBtn");
 
         function loadMyAccount() {
-        fetch("api/account/my", {
+        fetch("/api/accounts/my", {
             headers: {
                 Authorization: "Bearer " + token
             }
         })
         .then(res => {
             if (res.status === 401) {
-            accountInfoEl.innerHTML = `<p>아직 등록된 계좌가 없습니다.</>p>`;
-            return null;
+                alert("로그인이 필요합니다.");
+                location.replace("/login");
+                return null;
+            } else if (res.status === 404) {
+                accountInfoEl.innerHTML = `<p>아직 등록된 계좌가 없습니다.</p>`;
+                return null;
             } else if (!res.ok) {
                 throw new Error("계좌 정보를 불러올 수 없습니다.");
             }
