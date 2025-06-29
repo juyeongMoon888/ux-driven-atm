@@ -1,9 +1,11 @@
 package com.mybank.atmweb.service;
 
 import com.mybank.atmweb.domain.Bank;
+import org.springframework.stereotype.Service;
 
 import java.util.Random;
 
+@Service
 public class AccountNumberGenerator {
 
     public static String generate(Bank bank) {
