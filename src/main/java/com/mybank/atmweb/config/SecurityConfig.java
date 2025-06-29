@@ -41,7 +41,7 @@ public class SecurityConfig {
                                 "/css/**",
                                 "/js/**")
                         .permitAll() //메인 페이지 접근 허용 (비로그인 허용)
-                        .requestMatchers("/atm/**").authenticated() //로그인 필요
+                        .requestMatchers("/atm/**", "/api/accounts/**").authenticated() //로그인 필요
                         .anyRequest().denyAll()
                 )
                 .formLogin(login -> login
