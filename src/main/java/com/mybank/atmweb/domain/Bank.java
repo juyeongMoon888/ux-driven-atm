@@ -1,16 +1,24 @@
 package com.mybank.atmweb.domain;
 
 public enum Bank {
-    KB("국민"), NH("농협"), SH("신한"), WR("우리"), IBK("기업");
+    KB("국민은행"),
+    NH("농협은행"),
+    SH("신한은행"),
+    WR("우리은행"),
+    IBK("기업은행");
 
-    private final String name;
+    private final String displayName;
 
 
-    Bank(String name) {
-        this.name = name;
+    Bank(String displayName) {
+        this.displayName = displayName;
     }
 
-    public String getName() {
-        return name;
+    public String getCode() {
+        return name(); //enum name이 code 역할
+    }
+
+    public String getDisplayName() {
+        return displayName;
     }
 }
