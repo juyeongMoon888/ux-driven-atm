@@ -38,6 +38,7 @@ public class SecurityConfig {
                                 "/api/auth/**",
                                 "/api/ping",
                                 "/api/users/**",
+                                "/api/banks/**",
                                 "/css/**",
                                 "/js/**")
                         .permitAll() //메인 페이지 접근 허용 (비로그인 허용)
