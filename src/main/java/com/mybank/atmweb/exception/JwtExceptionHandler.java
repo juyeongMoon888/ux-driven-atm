@@ -1,4 +1,4 @@
-package com.mybank.atmweb.handler;
+package com.mybank.atmweb.exception;
 
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.SignatureException;

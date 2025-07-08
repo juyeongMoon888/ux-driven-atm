@@ -1,4 +1,4 @@
-package com.mybank.atmweb.handler;
+package com.mybank.atmweb.exception;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
