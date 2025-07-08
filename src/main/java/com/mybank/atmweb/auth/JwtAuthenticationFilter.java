@@ -1,5 +1,6 @@
-package com.mybank.atmweb.security;
+package com.mybank.atmweb.auth;
 
+import com.mybank.atmweb.security.CustomUserDetailsService;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

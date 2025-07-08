@@ -1,4 +1,4 @@
-package com.mybank.atmweb.security;
+package com.mybank.atmweb.auth;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
