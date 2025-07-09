@@ -38,23 +38,23 @@
 <script>
     //로그인 요청
     function login() {
-        const loginId = document.getElementById("loginId").value;
-        const password = document.getElementById("password").value;
-
+        const user = {
+            loginId: document.getElementById("loginId").value;
+            password: document.getElementById("password").value;
+        }
         fetch("/api/auth/login", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({ loginId, password })
+            body: JSON.stringify(user)
         })
-        .then(res => {
-            if (!res.ok) {
-                return res.json().then(data => {
-                    throw new Error(data.error || "로그인 실패");
-                });
+        .then(async response => {
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.error || "로그인 실패");
             }
-            return res.json(); // 서버에서 {token: "..."} JSON 응답 받음
+            return data;
         })
         .then(data => {
             localStorage.setItem("token", data.token); //토큰 저장
@@ -62,8 +62,25 @@
         })
         .catch(err => {
             document.getElementById("error-msg").innerText = err.message;
+            tryOnceToDetectRecovery();
         });
     }
+
+    // 서버 복구 확인
+        function tryOnceToDetectRecovery() {
+            setTimeout(() => {
+                fetch("/api/ping")
+                    .then(response => {
+                        if (response.ok) {
+                        localStorage.removeItem("token");
+                        location.reload();
+                        }
+                    })
+                    .catch(() => {
+                        console.warn("서버 여전히 꺼져 있음");
+                    });
+            }, 5000);
+        }
 </script>
 </body>
 </html>
