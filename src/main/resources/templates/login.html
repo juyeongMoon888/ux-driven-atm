@@ -37,50 +37,57 @@
 
 <script>
     //로그인 요청
-    function login() {
+    async function login() {
         const user = {
             loginId: document.getElementById("loginId").value;
             password: document.getElementById("password").value;
         }
-        fetch("/api/auth/login", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(user)
-        })
-        .then(async response => {
+        try {
+            const response = await fetch("/api/auth/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(user)
+            });
+
             const data = await response.json();
+
             if (!response.ok) {
-                throw new Error(data.error || "로그인 실패");
+                throw new Error(extractErrorMessage(data));
             }
-            return data;
-        })
-        .then(data => {
-            localStorage.setItem("token", data.token); //토큰 저장
-            window.location.href = "/"; //메인 페이지로 이동
-        })
-        .catch(err => {
-            document.getElementById("error-msg").innerText = err.message;
+            alert("로그인 성공!");
+            localStorage.setItem("token");
+            window.location.href = "/";
+        }
+        .catch(error) {
+            document.getElementById("error-msg").innerText = error.message;
             tryOnceToDetectRecovery();
         });
     }
 
+    // 예외 상황별 응답 처리
+    function extractErrorMessage(data) {
+        data?.message ||
+        Object.values(data.details || {})[0] ||
+        data?.error ||
+        "로그인 실패";
+    }
     // 서버 복구 확인
-        function tryOnceToDetectRecovery() {
-            setTimeout(() => {
-                fetch("/api/ping")
-                    .then(response => {
-                        if (response.ok) {
-                        localStorage.removeItem("token");
-                        location.reload();
-                        }
-                    })
-                    .catch(() => {
-                        console.warn("서버 여전히 꺼져 있음");
-                    });
-            }, 5000);
-        }
+    function tryOnceToDetectRecovery() {
+        setTimeout(() => {
+            fetch("/api/ping")
+                .then(response => {
+                    if (response.ok) {
+                    localStorage.removeItem("token");
+                    location.reload();
+                    }
+                })
+                .catch(() => {
+                    console.warn("서버 여전히 꺼져 있음");
+                });
+        }, 5000);
+    }
 </script>
 </body>
 </html>
