@@ -54,24 +54,37 @@
             const data = await response.json();
 
             if (!response.ok) {
-                throw new Error(extractErrorMessage(data));
+                if (response.status === 400) {
+                    throw new Error(extractErrorMessage(data));
+                } else if (response.status === 401) {
+                    throw new Error (data.message);
+                } else if (response.status === 500) {
+                    throw new Error ("서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
+                } else {
+                    throw new Error ("알 수 없는 오류 (code: ${response.status});
+                }
             }
             alert("로그인 성공!");
             localStorage.setItem("token");
             window.location.href = "/";
         }
-        .catch(error) {
+        .catch (error) {
+            if (error instanceOf TypeError && error.message === "Failed to fetch") {
+                document.getElement("error-msg").innerText = "서버와 연결할 수 없습니다. 인터넷 연결을 확인해주세요.";
+                tryOnceToDetectRecovery();
+            }
             document.getElementById("error-msg").innerText = error.message;
-            tryOnceToDetectRecovery();
-        });
+        };
     }
 
-    // 예외 상황별 응답 처리
+    // 401 에러 예외 상황별 서버가 JSON 응답을 보냈을 때 파싱
     function extractErrorMessage(data) {
-        data?.message ||
-        Object.values(data.details || {})[0] ||
-        data?.error ||
-        "로그인 실패";
+        return (
+            data?.message ||
+            Object.values(data.details || {})[0] ||
+            data?.error ||
+            "로그인 실패";
+        );
     }
     // 서버 복구 확인
     function tryOnceToDetectRecovery() {
