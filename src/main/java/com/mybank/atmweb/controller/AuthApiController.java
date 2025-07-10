@@ -2,15 +2,19 @@ package com.mybank.atmweb.controller;
 
 import com.mybank.atmweb.domain.User;
 import com.mybank.atmweb.dto.LoginRequest;
+import com.mybank.atmweb.exception.user.UserNotFoundException;
 import com.mybank.atmweb.repository.UserRepository;
-import com.mybank.atmweb.security.JwtUtil;
+import com.mybank.atmweb.auth.JwtUtil;
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/auth")
 public class AuthApiController {
@@ -18,25 +22,20 @@ public class AuthApiController {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
-    public AuthApiController(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.jwtUtil = jwtUtil;
-    }
-
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
         // 1. 아이디로 사용자 조회
         User user = userRepository.findByLoginId(request.getLoginId())
-                .orElseThrow(() -> new RuntimeException("존재하지 않는 사용자입니다."));
+                .orElseThrow(() -> new UserNotFoundException("아이디 또는 비밀번호가 일치하지 않습니다."));
 
         // 2. 비밀번호 검증
-        if (!passwordEncoder.matches(request.getPassword(), user.getPassword()))  {
-            throw new RuntimeException("비밀번호가 일치하지 않습니다.");
+        String rawPassword = request.getPassword();
+        if (!passwordEncoder.matches(request.getPassword(), rawPassword))  {
+            throw new UserNotFoundException("아이디 또는 비밀번호가 일치하지 않습니다.");
         }
 
-        //3. JWT 토큰 발급
-        String token = jwtUtil.createToken(user.getId(), user.getRole().name());
+        //3. 로그인 성공 시
+        String token = jwtUtil.createToken(user.getId(), user.getLoginId(), user.getRole().name());
 
         //4. 토큰을 JSON 바디로 응답
         return ResponseEntity.ok(Map.of("token", token));
