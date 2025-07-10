@@ -12,21 +12,26 @@
         <div class="card-body">
             <h4 class="card-title text-center mb-4">로그인</h4>
 
-            <div class="mb-3">
-                <label for="loginId" class="form-label">아이디</label>
-                <input type="text" id="loginId" class="form-control" placeholder="아이디를 입력하세요" required/>
-            </div>
+            <form id="loginForm">
+                <div class="mb-3">
+                    <label for="loginId" class="form-label">아이디</label>
+                    <input type="text" id="loginId" class="form-control" placeholder="아이디를 입력하세요" required/>
+                    <span id="loginId-error"></span>
+                </div>
 
-            <div class="mb-3">
-                <label for="password" class="form-label">비밀번호</label>
-                <input type="text" id="password" class="form-control" placeholder="비밀번호를 입력하세요" required/>
-            </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label">비밀번호</label>
+                    <input type="text" id="password" class="form-control" placeholder="비밀번호를 입력하세요" required/>
+                    <span id="password-error"></span>
+                </div>
 
-            <div class="d-grid">
-                <button type="button" onclick="login()" class="btn btn-primary">로그인</button>
-            </div>
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary">로그인</button>
+                </div>
 
-            <div id="error-msg" class="mt-3 text-danger text-center"></div>
+                <div id="error-msg" class="mt-3 text-danger text-center"></div>
+            </form>
+
         </div>
     </div>
 </div>
@@ -34,73 +39,6 @@
     <span>계정이 없으신가요?</span>
     <a href="/signup" class="btn btn-outline-primary btn-sm ms-2">회원가입</a>
 </div>
-
-<script>
-    //로그인 요청
-    async function login() {
-        const user = {
-            loginId: document.getElementById("loginId").value;
-            password: document.getElementById("password").value;
-        }
-        try {
-            const response = await fetch("/api/auth/login", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(user)
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                if (response.status === 400) {
-                    throw new Error(extractErrorMessage(data));
-                } else if (response.status === 401) {
-                    throw new Error (data.message);
-                } else if (response.status === 500) {
-                    throw new Error ("서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
-                } else {
-                    throw new Error ("알 수 없는 오류 (code: ${response.status});
-                }
-            }
-            alert("로그인 성공!");
-            localStorage.setItem("token");
-            window.location.href = "/";
-        }
-        .catch (error) {
-            if (error instanceOf TypeError && error.message === "Failed to fetch") {
-                document.getElement("error-msg").innerText = "서버와 연결할 수 없습니다. 인터넷 연결을 확인해주세요.";
-                tryOnceToDetectRecovery();
-            }
-            document.getElementById("error-msg").innerText = error.message;
-        };
-    }
-
-    // 401 에러 예외 상황별 서버가 JSON 응답을 보냈을 때 파싱
-    function extractErrorMessage(data) {
-        return (
-            data?.message ||
-            Object.values(data.details || {})[0] ||
-            data?.error ||
-            "로그인 실패";
-        );
-    }
-    // 서버 복구 확인
-    function tryOnceToDetectRecovery() {
-        setTimeout(() => {
-            fetch("/api/ping")
-                .then(response => {
-                    if (response.ok) {
-                    localStorage.removeItem("token");
-                    location.reload();
-                    }
-                })
-                .catch(() => {
-                    console.warn("서버 여전히 꺼져 있음");
-                });
-        }, 5000);
-    }
-</script>
+<script type="module" src="/js/login.js"></script>
 </body>
 </html>
