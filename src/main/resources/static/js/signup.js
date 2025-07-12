@@ -1,36 +1,57 @@
 import { showValidationMessages } from "./lib/utils.js";
 
-document.addEventListener("DOMContentLoaded", () => {
-    const form = document.getElementById("signupForm");
-    form.addEventListener("submit", submitSignup);
-})
+let signupForm, loginInput, passwordInput, nameInput, residentNumberInput, genderInput, phoneNumberInput, idCheckResult;
 
-function submitSignup(e) {
+document.addEventListener("DOMContentLoaded", main);
+
+function main() {
+    initElements();
+    bindEvents();
+}
+
+function initElements() {
+    signupForm = document.getElementById("signupForm");
+    loginIdInput = document.getElementById("loginId");
+    passwordInput = document.getElementById("password");
+    nameInput = document.getElementById("name");
+    residentNumberInput = document.getElementById("residentNumber");
+    genderInput = document.getElementById("gender");
+    phoneNumberInput = document.getElementById("phoneNumber");
+    idCheckResult = document.getElementById("id-check-result");
+}
+
+function bindEvents() {
+    signupForm.addEventListener("submit", handleSubmitSignup);
+}
+
+async function handleSubmitSignup(e) {
     e.preventDefault();
 
-    const formElement = document.getElementById("signupForm")
-
-    if(formElement.dataset.idChecked !== "true") {
+    if(signupForm.dataset.idChecked !== "true") {
         alert("아이디 중복 확인을 먼저 해주세요.");
         return;
     }
+
     const user = {
-        loginId: document.getElementById("loginId").value,
-        password: document.getElementById("password").value,
-        name: document.getElementById("name").value,
-        residentNumber: document.getElementById("residentNumber").value,
-        gender: document.getElementById("gender").value,
-        phoneNumber: document.getElementById("phoneNumber").value
+        loginId: loginIdInput.value,
+        password: passwordInput.value,
+        name: nameInput.value,
+        residentNumber: residentNumberInput.value,
+        gender: genderInput.value,
+        phoneNumber: phoneNumberInput.value
     };
-    fetch("/api/users/signup", {
-        method: "POST",
-        headers: {
-        "Content-Type": "application/json"
-        },
-        body: JSON.stringify(user)
-    })
-    .then(async res => {
+
+    try {
+        const res = await fetch("/api/users/signup", {
+            method: "POST",
+            headers: {
+            "Content-Type": "application/json"
+            },
+            body: JSON.stringify(user)
+        });
+
         const data = await res.json();
+
         if (data.code === "SIGNUP_SUCCESS") {
             alert(data.message || "회원가입 성공");
             location.href="/login";
@@ -39,48 +60,46 @@ function submitSignup(e) {
         } else {
             alert(data.message || "회원가입 실패");
         }
-    })
-    .catch(err => {
-        if (err instanceOf TypeError && err.message === "Failed to fetch") {
+    } catch(err) {
+        if (err instanceof TypeError && err.message === "Failed to fetch") {
             alert("서버와 연결할 수 없습니다. 인터넷 연결을 확인해주세요.");
             tryOnceToDetectRecovery();
+        } else {
+            alert("예상치 못한 오류가 발생했습니다.");
         }
-    });
+    }
 }
 
 //아이디 중복 확인 메서드
-function checkLoginId() {
-    const loginId = document.getElementById("loginId").value;
-    const resultElement = document.getElementById("id-check-result");
-    const formElement = document.getElementById("signupForm");//아이디 중복 확인 상태 저장
+async function checkLoginId() {
+    const loginId = loginIdInput.value;
 
     if(!loginId) {
-        resultElement.innerText="아이디를 입력해주세요.";
-        resultElement.style.color="red";
-        formElement.dataset.idChecked = "false";
+        setIdCheckResult("아이디를 입력해주세요", "red", "false");
         return;
     }
 
-    fetch(`/api/users/check-id?loginId=${encodeURIComponent(loginId)}`)
-    .then(async response => {
-        if (!response.ok) throw new Error("서버 오류");
-            return response.json();
-    })
-    .then (data => {
-        if(data.duplicate) {
-            resultElement.innerText = "사용 가능한 아이디입니다.";
-            resultElement.style.color = "green";
-            formElement.dataset.idChecked = "true";
+    try {
+        const res = fetch(`/api/users/check-id?loginId=${encodeURIComponent(loginId)}`)
+
+        if (!res.ok) throw new Error("서버 오류");
+
+        const data = await res.json();
+
+        if (data.duplicate) {
+            setIdCheckResult("사용 가능한 아이디입니다.", "green", "true");
         } else {
-            resultElement.innerText = "이미 사용 중인 아이디입니다."
-            resultElement.style.color = "red";
-            formElement.dataset.idChecked = "false";
+            setIdCheckResult("이미 사용 중인 아이디입니다.", "red", "false");
         }
-    })
-    .catch(error => {
-        console.error("아이디 중복 확인 중 에러:", error);
-        resultElement.innerText="서버 오류가 발생했습니다.";
-        resultElement.style.color = "red";
-        formElement.dataset.idChecked = "false";
-    });
+    } catch (err) {
+        setIdCheckResult("서버 오류가 발생했습니다.", "red", "false");
+    }
 }
+
+function setIdCheckResult(message, color, valid) {
+    idCheckResult.innerText =  message;
+    idCheckResult.style.color = color;
+    signupForm.dataset.idChecked = valid ? "true" : "false";
+}
+
+
