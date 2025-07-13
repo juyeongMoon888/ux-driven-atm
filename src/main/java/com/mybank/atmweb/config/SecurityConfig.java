@@ -1,16 +1,11 @@
 package com.mybank.atmweb.config;
 
-import com.mybank.atmweb.handler.CustomLoginFailureHandler;
-import com.mybank.atmweb.security.JwtAuthenticationFilter;
+import com.mybank.atmweb.exception.CustomLoginFailureHandler;
+import com.mybank.atmweb.auth.JwtAuthenticationFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -18,10 +13,10 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
     @Autowired
     private CustomLoginFailureHandler customLoginFailureHandler;
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final JwtAuthenticationFilter jwtFilter;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
-        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+    public SecurityConfig(JwtAuthenticationFilter jwtFilter) {
+        this.jwtFilter = jwtFilter;
     }
 
     @Bean
@@ -29,32 +24,25 @@ public class SecurityConfig {
         http
                 .csrf(csrf->csrf.disable())
 
-                .authorizeHttpRequests((authz) -> authz
+                .authorizeHttpRequests((auth) -> auth
                         .requestMatchers(
                                 "/",
                                 "/login",
                                 "/signup",
-                                "/banking",
-                                "/api/auth/**",
+                                "/error",
                                 "/api/ping",
-                                "/api/users/**",
-                                "/api/banks/**",
-                                "/css/**",
-                                "/js/**")
-                        .permitAll() //메인 페이지 접근 허용 (비로그인 허용)
-                        .requestMatchers("/atm/**", "/api/accounts/**").authenticated() //로그인 필요
+                                "/api/users/signup",
+                                "/api/users/check-id",
+                                "/api/auth/login")
+                        .permitAll()
+                        .requestMatchers("/js/**", "/css/**").permitAll()
                         .anyRequest().denyAll()
                 )
                 .formLogin(login -> login
                         .loginPage("/login")//로그인 안 되어 있으면 리디렉션
                         .permitAll()
                 )
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class); //필터 등록
-                return http.build();
-    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+        return http.build();
     }
 }
