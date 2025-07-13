@@ -4,18 +4,14 @@ import com.mybank.atmweb.domain.Role;
 import com.mybank.atmweb.domain.User;
 import com.mybank.atmweb.dto.SignupForm;
 import com.mybank.atmweb.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
+@RequiredArgsConstructor
 @Service
 public class UserService {
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder; //Spring Security 에서 제공하는 인터페이스
-
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-    }
+    private final PasswordEncoder passwordEncoder;
 
     public void signup(SignupForm form) {
         //아이디 중복 확인 버튼과 별개로 아이디 중복 체크
@@ -36,16 +32,7 @@ public class UserService {
         userRepository.save(user);
     }
     //아이디 중복 확인
-    public boolean isLoginIdAvailable(String loginId) {
-        return !userRepository.existsByLoginId(loginId);
-    }
-
-    public User findById(Long id) {
-        return userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("해당 유저를 찾을 수 없습니다."));
-    }
-    public User findByLoginId(String loginId) {
-        return userRepository.findByLoginId(loginId)
-                .orElseThrow(() -> new RuntimeException("해당 유저를 찾을 수 없습니다."));
+    public boolean isDuplicatedLoginId(String loginId) {
+        return userRepository.findByLoginId(loginId).isPresent();
     }
 }
