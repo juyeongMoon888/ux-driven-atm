@@ -35,7 +35,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         //JWT 검사 제외 대상
         List<String> whitelist = List.of(
                 "/",
-
                 "/login",
                 "/signup",
                 "/api/ping",
@@ -48,11 +47,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 path.equals("/error") ||
                 path.startsWith("/js") ||
                 path.startsWith("/css") ||
-                path.startsWith("/api/auth") ||   // 전체 인증 관련 경로
+                path.startsWith("/api/auth") ||
                 path.startsWith("/images") ||
                 path.startsWith("/favicon.ico")
         ) {
-            System.out.println("✅ JWT 필터 우회 경로 통과: " + path);
             filterChain.doFilter(request, response);
             return;
         }
@@ -72,7 +70,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             String loginId = jwtUtil.getLoginIdFromToken(token);
             Long userId = jwtUtil.getUserId(token);
-            String role = jwtUtil.getRole(token);
 
             String redisToken = redisTemplate.opsForValue().get("accessToken:" + userId);
             if (redisToken == null || !redisToken.equals(token)) {
