@@ -1,18 +1,32 @@
 import ApiError from "./errors/ApiError.js";
-import { showValidationMessages } from "./lib/utils.js";
+import { showValidationMessages, tryOnceToDetectRecovery } from "./lib/utils.js";
 
-document.addEventListener("DOMContentListener", () => {
-    const form = document.getElementById("loginForm");
-    form.addEventListener("submit", login);
-});
+document.addEventListener("DOMContentLoaded", main);
+let loginForm, loginIdInput, passwordInput;
 
-async function login(e) {
+function main() {
+    initElements();
+    bindEvents();
+}
+
+function initElements() {
+    loginForm = document.getElementById("loginForm");
+    loginIdInput = document.getElementById("loginId");
+    passwordInput = document.getElementById("password");
+}
+
+function bindEvents() {
+    loginForm.addEventListener("submit", handleLoginSubmit);
+}
+
+async function handleLoginSubmit(e) {
     e.preventDefault();
 
     const user = {
-        loginId: document.getElementById("loginId").value,
-        password: document.getElementById("password").value
-    }
+        loginId: loginIdInput.value,
+        password: passwordInput.value
+    };
+
     try {
         const response = await fetch("/api/auth/login", {
             method: "POST",
@@ -22,49 +36,45 @@ async function login(e) {
             body: JSON.stringify(user)
         });
 
-        const errorData = await response.json();
+        const data = await response.json();
 
         if (!response.ok) {
-            if (response.status === 400) {
-                throw new ApiError (errorData.code, errorData.message);
-            } else if (response.status === 401) {
-                throw new ApiError (errorData.code, errorData.message);
-            } else if (response.status === 500) {
-                throw new Error ("서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
-            } else {
-                throw new Error ("알 수 없는 오류 (code: ${response.status});
-            }
+            handleErrorResponse(response.status, data);
+            return;
         }
+
+        const { accessToken, user:userInfo } = data;
+
         alert("로그인 성공!");
-        localStorage.setItem("token");
+        localStorage.setItem("accessToken", accessToken);
+        localStorage.setItem("user", JSON.stringify(userInfo));
         window.location.href = "/";
+    } catch (err) {
+        handleNetworkOrApiError(err);
     }
-    .catch (err) {
-        if (err instanceOf ApiError && err.code === "VALIDATION_FAILED") {
-            showValidationMessages(errorData.details);
-        } else if (err instanceOf ApiError && err.code == "UNAUTHORIZED") {
-            alert(err.message);
-            location.href = "/login";
-        } else if (err instanceOf TypeError && error.message === "Failed to fetch") {
-            alert("서버와 연결할 수 없습니다. 인터넷 연결을 확인해주세요.");
-            location.href = "/login";
-            tryOnceToDetectRecovery();
-        }
-    };
 }
 
-// 서버 복구 확인
-function tryOnceToDetectRecovery() {
-    setTimeout(() => {
-        fetch("/api/ping")
-            .then(response => {
-                if (response.ok) {
-                localStorage.removeItem("token");
-                location.reload();
-                }
-            })
-            .catch(() => {
-                console.warn("서버 여전히 꺼져 있음");
-            });
-    }, 5000);
+function handleErrorResponse(status, data) {
+    if (status === 400 || status === 401) {
+        throw new ApiError (data.code, data.message);
+    } else if (response.status === 500) {
+        throw new Error ("서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
+    } else {
+        throw new Error (`알 수 없는 오류 (code: ${status})`);
+    }
+}
+
+function handleNetworkOrApiError(status, data) {
+    if (err instanceof ApiError && err.code === "VALIDATION_FAILED") {
+        showValidationMessages(data.details);
+    } else if (err instanceof ApiError && err.code == "UNAUTHORIZED") {
+        alert(err.message);
+        location.href = "/login";
+    } else if (err instanceof TypeError && err.message === "Failed to fetch") {
+        alert("서버와 연결할 수 없습니다. 인터넷 연결을 확인해주세요.");
+        tryOnceToDetectRecovery();
+        location.href = "/login";
+    } else {
+        alert(err.message);
+    }
 }
