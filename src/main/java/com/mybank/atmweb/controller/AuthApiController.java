@@ -2,12 +2,17 @@ package com.mybank.atmweb.controller;
 
 import com.mybank.atmweb.domain.User;
 import com.mybank.atmweb.dto.LoginRequest;
+import com.mybank.atmweb.dto.LoginResponse;
 import com.mybank.atmweb.exception.user.UserNotFoundException;
 import com.mybank.atmweb.repository.UserRepository;
 import com.mybank.atmweb.auth.JwtUtil;
-import jakarta.servlet.http.HttpSession;
+import com.mybank.atmweb.service.AuthService;
+import com.mybank.atmweb.service.TokenBlacklistService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -21,6 +26,9 @@ public class AuthApiController {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final TokenBlacklistService tokenBlacklistService;
+    private final AuthService authService;
+    private final RedisTemplate<String, String> redisTemplate;
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
@@ -30,22 +38,66 @@ public class AuthApiController {
 
         // 2. 비밀번호 검증
         String rawPassword = request.getPassword();
-        if (!passwordEncoder.matches(request.getPassword(), rawPassword))  {
+        if (!passwordEncoder.matches(rawPassword, user.getPassword()))  {
             throw new UserNotFoundException("아이디 또는 비밀번호가 일치하지 않습니다.");
         }
 
         //3. 로그인 성공 시
-        String token = jwtUtil.createToken(user.getId(), user.getLoginId(), user.getRole().name());
+        LoginResponse tokens = authService.login(user);
 
         //4. 토큰을 JSON 바디로 응답
-        return ResponseEntity.ok(Map.of("token", token));
+        return ResponseEntity.ok(Map.of(
+                "accessToken", tokens.getAccessToken(),
+                "refreshToken", tokens.getRefreshToken(),
+                "user", Map.of(
+                        "id", user.getId(),
+                        "name", user.getName()
+                )));
     }
 
+    @PostMapping("/refresh")
+    public ResponseEntity<?> refreshToken(HttpServletRequest request) {
+        String refreshToken = jwtUtil.extractToken(request);
 
+        if (!jwtUtil.validateToken(refreshToken)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                    "code", "UNAUTHORIZED",
+                    "message", "리프레시 토큰 만료"
+            ));
+        }
+
+        Long userId = jwtUtil.getUserId(refreshToken);
+
+        String savedToken = redisTemplate.opsForValue().get("refreshToken:" + userId);
+        if (savedToken == null && !refreshToken.equals(savedToken)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                    "code", "UNAUTHORIZED",
+                    "message", "위조된 토큰"
+            ));
+        }
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다."));
+
+        String newAccessToken = jwtUtil.createAccessToken(user);
+
+        return ResponseEntity.ok(Map.of(
+                "code", "ACCESS_TOKEN_REISSUED",
+                "message", "Access token이 재발급되었습니다.",
+                "data", Map.of(
+                        "accessToken", newAccessToken
+                )
+        ));
+    }
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(HttpSession session) {
-        session.invalidate(); //세션 제거
-        return ResponseEntity.ok("로그아웃 완료");
+    public ResponseEntity<?> logout(HttpServletRequest request) {
+        String token = jwtUtil.extractToken(request);
+        if (token != null && jwtUtil.validateToken(token)) {
+            tokenBlacklistService.blacklistToken(token);
+            Long userId = jwtUtil.getUserId(token);
+            authService.logout(token, userId);
+        }
+        return ResponseEntity.ok(Map.of("code", "LOGOUT_SUCCESS", "message", "로그아웃 완료"));
     }
 
 }
