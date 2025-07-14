@@ -1,5 +1,5 @@
 import ApiError from "./errors/ApiError.js";
-import { getAccessToken, getUserFromLocalStorage, tryOnceToDetectRecovery } from "./lib/utils.js"
+import { getAccessToken, getUserFromLocalStorage, tryOnceToDetectRecovery, fetchWithAuth } from "./lib/utils.js"
 
 document.addEventListener("DOMContentLoaded", main);
 let loginBtn, logoutBtn, greetingEl;
@@ -19,11 +19,13 @@ function initElement() {
 
 function initUI() {
     const accessToken = getAccessToken();
-    const user = getUserFromLocalStorage();
+    const cachedUser = getUserFromLocalStorage();
 
-    if (accessToken && user) {
+    if (!accessToken) return;
+
+    if (cachedUser) {
         setUIToLoggedIn();
-        greetingEl.textContent=`안녕하세요,${user.name}님`;
+        greetingEl.textContent=`안녕하세요,${cachedUser.name}님`;
     }
 }
 
@@ -60,28 +62,26 @@ function resetUIToLoggedOut() {
 
 async function fetchMyInfo(accessToken) {
     try {
-        const response = await fetch("/api/users/me", {
-            method: "GET",
-            headers: {
-                "Authorization": "Bearer " + accessToken,
-                "Content-Type": "application/json"
-            }
-        });
+        const res = await fetchWithAuth("/api/users/me");
 
-        if (!response.ok) {
-            const errorData = await response.json();
+        if (res === null) {
+            return;
+        }
+        if (res.ok) {
+            const user = await res.json();
+            greetingEl.textContent=`안녕하세요,${user.name}님`;
+            localStorage.setItem("user", JSON.stringify(user));
+        } else {
+            const errorData = await res.json();
 
-            if (response.status === 401) {
-                throw new ApiError (errorData.code, errorData.message);
+            if (res.status === 401) {
+                 throw new ApiError (errorData.code, errorData.message);
             } else if (response.status === 500) {
                 throw new Error ("서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
             } else {
-                throw new Error (`알 수 없는 오류 (code: ${response.status})`);
+                throw new Error(`알 수 없는 오류 (code: ${res.status})`);
             }
         }
-
-        const data = await response.json();
-        greetingEl.textContent=`안녕하세요,${data.name}님`;
     }
     catch (err) {
         resetUIToLoggedOut();
@@ -97,7 +97,6 @@ async function fetchMyInfo(accessToken) {
         }
     };
 }
-
 
 
 
