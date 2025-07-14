@@ -2,6 +2,8 @@ package com.mybank.atmweb.auth;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mybank.atmweb.security.CustomUserDetailsService;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -62,11 +64,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
         if (!authHeader.startsWith("Bearer ")) {
-            SecurityContextHolder.clearContext();
             setUnauthorizedResponse(response, "MALFORMED_AUTH_HEADER", "Authorization 헤더가 없거나 형식이 올바르지 않습니다.");
             return;
         }
-
 
         String token = authHeader.substring(7);
 
@@ -76,7 +76,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             String redisToken = redisTemplate.opsForValue().get("accessToken:" + userId);
             if (redisToken == null || !redisToken.equals(token)) {
-                SecurityContextHolder.clearContext();
                 setUnauthorizedResponse(response,  "TOKEN_LOGGED_OUT", "만료되었거나 로그아웃된 토큰입니다.");
                 return;
             }
@@ -86,8 +85,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        } catch (Exception e) {
-            SecurityContextHolder.clearContext();
+        } catch (ExpiredJwtException e) {
+            setUnauthorizedResponse(response, "TOKEN_EXPIRED", "토큰이 만료되었습니다.");
+            return;
+        }
+
+        catch (JwtException e) {
             setUnauthorizedResponse(response, "TOKEN_INVALID", "유효하지 않거나 만료된 토큰입니다.");
             return;
         }
@@ -96,6 +99,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private void setUnauthorizedResponse(HttpServletResponse response, String errorCode, String message) throws IOException {
+        SecurityContextHolder.clearContext();
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType("application/json;charset=UTF-8");
         Map<String, String> error = Map.of(
