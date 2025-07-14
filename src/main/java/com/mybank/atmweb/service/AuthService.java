@@ -3,8 +3,10 @@ package com.mybank.atmweb.service;
 import com.mybank.atmweb.auth.JwtUtil;
 import com.mybank.atmweb.domain.User;
 import com.mybank.atmweb.dto.LoginResponse;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -16,11 +18,10 @@ public class AuthService {
     public final RedisTemplate<String, String> redisTemplate;
     private final JwtUtil jwtUtil;
 
-    public LoginResponse login(User user) {
+    public LoginResponse login(User user, HttpServletResponse response) {
         String accessToken = jwtUtil.createAccessToken(user);
         String refreshToken = jwtUtil.createRefreshToken(user);
 
-        //redis에 토큰 저장
         redisTemplate.opsForValue().set(
                 "accessToken:" + user.getId(),
                 accessToken,
@@ -33,7 +34,15 @@ public class AuthService {
                 Duration.ofDays(7)
         );
 
-        return new LoginResponse(accessToken, refreshToken);
+        ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(Duration.ofDays(7))
+                .build();
+        response.addHeader("Set-Cookie", cookie.toString());
+
+        return new LoginResponse(accessToken);
     }
 
     public void logout(String accessToken, Long userId) {
