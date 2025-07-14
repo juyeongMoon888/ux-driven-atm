@@ -57,10 +57,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String authHeader = request.getHeader("Authorization");
 
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        if (authHeader == null || authHeader.isBlank()) {
+            setUnauthorizedResponse(response, "AUTH_HEADER_MISSING", "Authorization 헤더가 없거나 형식이 올바르지 않습니다.");
+            return;
+        }
+        if (!authHeader.startsWith("Bearer ")) {
             SecurityContextHolder.clearContext();
-
-            setUnauthorizedResponse(response, "Authorization 헤더가 없거나 형식이 올바르지 않습니다.");
+            setUnauthorizedResponse(response, "MALFORMED_AUTH_HEADER", "Authorization 헤더가 없거나 형식이 올바르지 않습니다.");
             return;
         }
 
@@ -74,7 +77,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String redisToken = redisTemplate.opsForValue().get("accessToken:" + userId);
             if (redisToken == null || !redisToken.equals(token)) {
                 SecurityContextHolder.clearContext();
-                setUnauthorizedResponse(response,  "만료되었거나 로그아웃된 토큰입니다.");
+                setUnauthorizedResponse(response,  "TOKEN_LOGGED_OUT", "만료되었거나 로그아웃된 토큰입니다.");
                 return;
             }
 
@@ -85,18 +88,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         } catch (Exception e) {
             SecurityContextHolder.clearContext();
-            setUnauthorizedResponse(response, "유효하지 않거나 만료된 토큰입니다.");
+            setUnauthorizedResponse(response, "TOKEN_INVALID", "유효하지 않거나 만료된 토큰입니다.");
             return;
         }
 
         filterChain.doFilter(request, response);
     }
 
-    private void setUnauthorizedResponse(HttpServletResponse response, String message) throws IOException {
+    private void setUnauthorizedResponse(HttpServletResponse response, String errorCode, String message) throws IOException {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType("application/json;charset=UTF-8");
         Map<String, String> error = Map.of(
-                "code", "SESSION_EXPIRED",
+                "code", errorCode,
                 "message", message
         );
         new ObjectMapper().writeValue(response.getWriter(), error);
