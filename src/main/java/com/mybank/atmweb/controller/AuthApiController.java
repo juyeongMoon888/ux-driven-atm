@@ -8,7 +8,9 @@ import com.mybank.atmweb.repository.UserRepository;
 import com.mybank.atmweb.auth.JwtUtil;
 import com.mybank.atmweb.service.AuthService;
 import com.mybank.atmweb.service.TokenBlacklistService;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -31,7 +33,7 @@ public class AuthApiController {
     private final RedisTemplate<String, String> redisTemplate;
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request, HttpServletResponse response) {
         // 1. 아이디로 사용자 조회
         User user = userRepository.findByLoginId(request.getLoginId())
                 .orElseThrow(() -> new UserNotFoundException("아이디 또는 비밀번호가 일치하지 않습니다."));
@@ -43,36 +45,42 @@ public class AuthApiController {
         }
 
         //3. 로그인 성공 시
-        LoginResponse tokens = authService.login(user);
+        LoginResponse accessToken = authService.login(user, response);
 
         //4. 토큰을 JSON 바디로 응답
         return ResponseEntity.ok(Map.of(
-                "accessToken", tokens.getAccessToken(),
-                "refreshToken", tokens.getRefreshToken(),
+                "accessToken", accessToken.getAccessToken(),
                 "user", Map.of(
                         "id", user.getId(),
                         "name", user.getName()
                 )));
     }
 
-    @PostMapping("/refresh")
-    public ResponseEntity<?> refreshToken(HttpServletRequest request) {
-        String refreshToken = jwtUtil.extractToken(request);
+    @PostMapping("/token/refresh")
+    public ResponseEntity<?> refreshToken(HttpServletRequest request,
+                                          HttpServletResponse response) {
+        Cookie[] cookies = request.getCookies();
+        String refreshToken = authService.findRefreshTokenFromCookies(cookies);
 
         if (!jwtUtil.validateToken(refreshToken)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
-                    "code", "UNAUTHORIZED",
-                    "message", "리프레시 토큰 만료"
-            ));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("code", "REFRESH_INVALID", "message", "Refresh Token이 유효하지 않습니다."));
         }
 
         Long userId = jwtUtil.getUserId(refreshToken);
 
         String savedToken = redisTemplate.opsForValue().get("refreshToken:" + userId);
-        if (savedToken == null && !refreshToken.equals(savedToken)) {
+        //✅ 수정 완료 토큰 없거나 저장된 토큰과 다른 경우 분리 처리
+        if (savedToken == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
-                    "code", "UNAUTHORIZED",
-                    "message", "위조된 토큰"
+                    "code", "REFRESH_TOKEN_NOT_FOUND",
+                    "message", "로그아웃되었거나 토큰이 저장되지 않았습니다."
+            ));
+        }
+        if (!refreshToken.equals(savedToken)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                    "code", "INVALID_REFRESH_TOKEN",
+                    "message", "위조된 토큰입니다."
             ));
         }
 
