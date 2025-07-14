@@ -3,6 +3,7 @@ package com.mybank.atmweb.service;
 import com.mybank.atmweb.auth.JwtUtil;
 import com.mybank.atmweb.domain.User;
 import com.mybank.atmweb.dto.LoginResponse;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -55,5 +56,17 @@ public class AuthService {
         );
         redisTemplate.delete("accessToken:" + userId);
         redisTemplate.delete("refreshToken:" + userId);
+    }
+
+    public String findRefreshTokenFromCookies(Cookie[] cookies) {
+        if (cookies == null) return null;
+
+        for (Cookie cookie : cookies) {
+            if ("refreshToken".equals(cookie.getName())) {
+                return cookie.getValue();
+            }
+        }
+
+        return null;
     }
 }
