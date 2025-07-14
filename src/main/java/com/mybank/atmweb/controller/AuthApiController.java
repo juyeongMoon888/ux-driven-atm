@@ -57,8 +57,7 @@ public class AuthApiController {
     }
 
     @PostMapping("/token/refresh")
-    public ResponseEntity<?> refreshToken(HttpServletRequest request,
-                                          HttpServletResponse response) {
+    public ResponseEntity<?> refreshToken(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
         String refreshToken = authService.findRefreshTokenFromCookies(cookies);
 
@@ -70,7 +69,6 @@ public class AuthApiController {
         Long userId = jwtUtil.getUserId(refreshToken);
 
         String savedToken = redisTemplate.opsForValue().get("refreshToken:" + userId);
-        //✅ 수정 완료 토큰 없거나 저장된 토큰과 다른 경우 분리 처리
         if (savedToken == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
                     "code", "REFRESH_TOKEN_NOT_FOUND",
