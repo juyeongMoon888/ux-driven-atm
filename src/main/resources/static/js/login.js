@@ -38,9 +38,8 @@ async function handleLoginSubmit(e) {
 
         const data = await response.json();
 
-        if (!response.ok) {
-            handleErrorResponse(response.status, data);
-            return;
+        if (!res.ok) {
+            await handleErrorResponse(res);
         }
 
         const { accessToken, user:userInfo } = data;
@@ -51,16 +50,6 @@ async function handleLoginSubmit(e) {
         window.location.href = "/";
     } catch (err) {
         handleNetworkOrApiError(err);
-    }
-}
-
-function handleErrorResponse(status, data) {
-    if (status === 400 || status === 401) {
-        throw new ApiError (data.code, data.message);
-    } else if (response.status === 500) {
-        throw new Error ("서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
-    } else {
-        throw new Error (`알 수 없는 오류 (code: ${status})`);
     }
 }
 
