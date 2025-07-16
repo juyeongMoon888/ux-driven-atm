@@ -1,5 +1,7 @@
 package com.mybank.atmweb.auth;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mybank.atmweb.security.CustomUserDetailsService;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -9,6 +11,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -17,9 +20,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -33,7 +38,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
         System.out.println("🔍 Incoming path: " + request.getRequestURI());
+        System.out.println("Method: " + request.getMethod());
         String path = request.getRequestURI();
+
         //JWT 검사 제외 대상
         List<String> whitelist = List.of(
                 "/",
@@ -53,6 +60,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 path.startsWith("/images") ||
                 path.startsWith("/favicon.ico")
         ) {
+
             filterChain.doFilter(request, response);
             return;
         }
@@ -69,6 +77,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         String token = authHeader.substring(7);
+
 
         try {
             String loginId = jwtUtil.getLoginIdFromToken(token);
@@ -98,15 +107,38 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    private void setUnauthorizedResponse(HttpServletResponse response, String errorCode, String message) throws IOException {
-        SecurityContextHolder.clearContext();
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        response.setContentType("application/json;charset=UTF-8");
-        Map<String, String> error = Map.of(
-                "code", errorCode,
-                "message", message
-        );
-        new ObjectMapper().writeValue(response.getWriter(), error);
+    private void setUnauthorizedResponse(HttpServletResponse response, String errorCode, String message) {
+        try {
+            SecurityContextHolder.clearContext();
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json;charset=UTF-8");
+            Map<String, String> error = Map.of(
+                    "code", errorCode,
+                    "message", message
+            );
+            new ObjectMapper().writeValue(response.getWriter(), error);
+            response.flushBuffer();
+        } catch (JsonMappingException e) {
+            log.error("setUnauthorizedResponse 중 JSON 매핑 예외 발생: ", e);
+            fallbackSend(response);
+        } catch (JsonProcessingException e) {
+            log.error("setUnauthorizedResponse 중 JSON 매핑 예외 발생: ", e);
+            fallbackSend(response);
+        } catch (IOException e) {
+            log.error("Fallback 처리도 실패: ", e);
+        }
+    }
+
+    private void fallbackSend(HttpServletResponse response) {
+        try {
+            response.reset();
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("text/plain;charset=UTF-8");
+            response.getWriter().write("code=UNAUTHORIZED\nmessage=인증 실패 (fallback)");
+            response.flushBuffer();
+        } catch (IOException e) {
+            log.error("Fallback 응답도 실패", e);
+        }
     }
 }
 
