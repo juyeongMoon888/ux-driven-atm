@@ -1,5 +1,7 @@
 import ApiError from "./errors/ApiError.js";
-import { getAccessToken, getUserFromLocalStorage, tryOnceToDetectRecovery, fetchWithAuth } from "./lib/utils.js"
+import { getAccessToken, getUserFromLocalStorage, tryOnceToDetectRecovery } from "./lib/utils.js"
+import { fetchWithAuth } from "./lib/fetchWithAuth.js"
+
 
 document.addEventListener("DOMContentLoaded", main);
 let loginBtn, logoutBtn, greetingEl;
@@ -50,9 +52,18 @@ function setUIToLoggedOut() {
         greetingEl.textContent = "";
     }
 }
-function handleLogout() {
-    localStorage.removeItem("accessToken");
-    location.reload();
+async function handleLogout() {
+    try {
+        await fetchWithAuth("/api/auth/logout", {
+           method: "POST"
+        });
+    } catch (err) {
+        console.warn("서버 로그아웃 실패", err);
+    } finally {
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("user");
+        location.reload();
+    }
 }
 
 function resetUIToLoggedOut() {
@@ -61,6 +72,7 @@ function resetUIToLoggedOut() {
 }
 
 async function fetchMyInfo(accessToken) {
+    console.log("accessToken = ", accessToken)
     try {
         const res = await fetchWithAuth("/api/users/me");
 
@@ -76,7 +88,7 @@ async function fetchMyInfo(accessToken) {
 
             if (res.status === 401) {
                  throw new ApiError (errorData.code, errorData.message);
-            } else if (response.status === 500) {
+            } else if (res.status === 500) {
                 throw new Error ("서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
             } else {
                 throw new Error(`알 수 없는 오류 (code: ${res.status})`);
