@@ -47,13 +47,6 @@ public class AuthService {
     }
 
     public void logout(String accessToken, Long userId) {
-        long expiration = jwtUtil.getExpirationMillis(accessToken);
-
-        redisTemplate.opsForValue().set(
-                "blacklist:" + accessToken,
-                "true",
-                Duration.ofMillis(expiration)
-        );
         redisTemplate.delete("accessToken:" + userId);
         redisTemplate.delete("refreshToken:" + userId);
     }
