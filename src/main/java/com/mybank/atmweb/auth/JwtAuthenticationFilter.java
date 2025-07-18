@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mybank.atmweb.security.CustomUserDetailsService;
+import com.mybank.atmweb.service.TokenBlacklistService;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
@@ -31,6 +32,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtUtil jwtUtil;
     private final CustomUserDetailsService userDetailsService;
     private final RedisTemplate<String, String> redisTemplate;
+    private final TokenBlacklistService tokenBlacklistService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -83,6 +85,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String loginId = jwtUtil.getLoginIdFromToken(token);
             Long userId = jwtUtil.getUserId(token);
 
+            if (tokenBlacklistService.isBlacklisted(token)) {
+                setUnauthorizedResponse(response, "TOKEN_BLACKLISTED", "이미 로그아웃된 토큰입니다.");
+                return;
+            }
+
             String redisToken = redisTemplate.opsForValue().get("accessToken:" + userId);
             if (redisToken == null || !redisToken.equals(token)) {
                 setUnauthorizedResponse(response,  "TOKEN_LOGGED_OUT", "만료되었거나 로그아웃된 토큰입니다.");
@@ -108,6 +115,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private void setUnauthorizedResponse(HttpServletResponse response, String errorCode, String message) {
+        log.error("setUnauthorizedResponse 중");
         try {
             SecurityContextHolder.clearContext();
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
