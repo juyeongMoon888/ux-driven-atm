@@ -13,35 +13,40 @@
     <div class="col-md-6">
         <label for="loginId" class="form-label">아이디</label>
         <div class = input-group>
-            <input type="text" id="loginId" class="form-control" required/>
-            <span id="loginId-error"></span>
+            <input type="text" id="loginId" class="form-control" />
             <button type="button" class="btn btn-outline-secondary" id="checkLoginIdBtn">중복 확인</button>
         </div>
+        <span id="loginId-error"></span>
         <div id="id-check-result" class="form-text mt-1"></div>
     </div>
 
     <div class="col-md-6">
         <label for="password" class="form-label">비밀번호</label>
+        <input type="text" id="password" class="form-control" />
         <span id="password-error"></span>
-        <input type="text" id="password" class="form-control" required/>
+    </div>
+
+    <div class="col-md-6">
+        <label for="email" class="form-label">이메일</label>
+        <input type="text" id="email" class="form-control" />
+        <span id="email-error"></span>
     </div>
 
     <div class="col-md-6">
         <label for="name" class="form-label">이름</label>
-        <input type="text" id="name" class="form-control" required/>
+        <input type="text" id="name" class="form-control" />
         <span id="name-error"></span>
     </div>
 
     <div class="col-md-6">
         <label for="residentNumber" class="form-label">주민등록번호</label>
-        <input type="text" id="residentNumber" class="form-control" required/>
+        <input type="text" id="residentNumber" class="form-control" />
         <span id="residentNumber-error"></span>
-
     </div>
 
     <div class="col-md-6">
-        <label for="gender" claa="form-label">성별</label>
-        <select type="text" id="gender" class="form-select" required/>
+        <label for="gender" class="form-label">성별</label>
+        <select type="text" id="gender" class="form-select" />
         <option value="MALE">남성</option>
         <option value="FEMALE">여성</option>
         </select>
@@ -50,7 +55,7 @@
 
     <div class="col-md-6">
         <label for="phoneNumber" class="form-label">전화번호</label>
-        <input type="text" id="phoneNumber" class="form-control" required/>
+        <input type="text" id="phoneNumber" class="form-control" />
         <span id="phoneNumber-error"></span>
     </div>
 
