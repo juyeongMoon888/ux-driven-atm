@@ -1,21 +1,24 @@
 export function validateUser(user) {
+    console.log("정적 검사 작동 확인");
     const errors = {};
-    if (!user.loginId.trim()) return "아이디를 입력해주세요";
 
-    if (!user.password.trim()) return "비밀번호를 입력해주세요";
-    if (user.password.length < 8) return "비밀번호는 8자 이상이어야 합니다";
+    if (!user.loginId.trim()) errors.loginId = "NOTBLANK_LOGINID";
 
-    if (!user.email.trim()) return "이메일을 입력해주세요";
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(user.email)) return "이메일 형식이 올바르지 않습니다";
+    if (!user.password.trim()) errors.password = "NOTBLANK_PASSWORD";
+    else if (user.password.length < 8) errors.password = "SIZE_PASSWORD";
 
-    if (!user.name.trim()) return "이름을 입력해주세요";
+    if (!user.email.trim()) errors.email = "NOTBLANK_EMAIL";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(user.email)) errors.email = "EMAIL_EMAIL";
 
-    if (!user.residentNumber.trim()) return "주민등록번호를 입력해주세요";
-    if (!/^\d{13}$/.test(user.residentNumber)) return "주민등록번호는 13자리 숫자여야 합니다";
+    if (!user.name.trim()) errors.name = "NOTBLANK_NAME";
 
-    if (!user.gender.trim()) return "성별을 입력해주세요";
+    if (!user.residentNumber.trim()) errors.residentNumber = "NOTBLANK_RESIDENTNUMBER";
+    else if (!/^\d{13}$/.test(user.residentNumber)) errors.residentNumber = "SIZE_RESIDENTNUMBER";
 
-    if (!user.phoneNumber.trim()) return "전화번호를 입력해주세요";
-    if (!/^\d{10,11}$/.test(user.phoneNumber)) return "전화번호는 10~11자리 숫자로 입력해주세요";
-    return null;
+    if (!user.gender.trim()) errors.gender = "NOTBLANK_GENDER";
+
+    if (!user.phoneNumber.trim()) errors.phoneNumber = "NOTBLANK_PHONENUMBER";
+    else if (!/^\d{10,11}$/.test(user.phoneNumber)) errors.phoneNumber = "PATTERN_PHONENUMBER";
+
+    return Object.keys(errors).length > 0 ? errors : null;
 }
