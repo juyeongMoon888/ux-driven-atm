@@ -3,6 +3,8 @@ package com.mybank.atmweb.service;
 import com.mybank.atmweb.domain.Role;
 import com.mybank.atmweb.domain.User;
 import com.mybank.atmweb.dto.SignupForm;
+import com.mybank.atmweb.global.exception.ErrorCode;
+import com.mybank.atmweb.global.exception.user.CustomException;
 import com.mybank.atmweb.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -16,7 +18,7 @@ public class UserService {
     public void signup(SignupForm form) {
         //아이디 중복 확인 버튼과 별개로 아이디 중복 체크
         if (userRepository.existsByLoginId(form.getLoginId())) {
-            throw new IllegalArgumentException("이미 사용 중인 아이디입니다.");
+            throw new CustomException(ErrorCode.USER_EXIST);
         }
 
         //비밀번호 암호화 및 저장
