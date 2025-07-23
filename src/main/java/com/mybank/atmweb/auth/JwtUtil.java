@@ -18,7 +18,9 @@ public class JwtUtil {
 
     private static final String SECRET ="your-256-bit-secret-your-256-bit-secret";
     private static final Key SECRET_KEY = Keys.hmacShaKeyFor(SECRET.getBytes());
-    private static final long ACCESS_TOKEN_EXPIRE_MS = 1000 * 60 * 60;
+    /*private static final long ACCESS_TOKEN_EXPIRE_MS = 1000 * 60 * 60;*/
+    private static final long ACCESS_TOKEN_EXPIRE_MS = 30 * 1000L;
+
     private static final long REFRESH_TOKEN_EXPIRE_MS = 1000L * 60 * 60 * 24 * 7;
 
     //	로그인 성공 시 JWT 생성
@@ -63,19 +65,11 @@ public class JwtUtil {
         return null;
     }
 
-    public boolean validateToken(String token) {
-        try {
-            Jws<Claims> claims = Jwts.parserBuilder()
-                    .setSigningKey(SECRET_KEY)
-                    .build()
-                    .parseClaimsJws(token);
-        } catch (SecurityException | MalformedJwtException e) {
-            log.warn("잘못된 JWT 서명: {}", e.getMessage());
-        } catch (ExpiredJwtException e) {
-            log.warn("만료된 토큰: {}", e.getMessage());
-        }
-
-        return false;
+    public void validateToken(String token) {
+        Jws<Claims> claims = Jwts.parserBuilder()
+                .setSigningKey(SECRET_KEY)
+                .build()
+                .parseClaimsJws(token);
     }
 
     public Long getUserId(String token) {
