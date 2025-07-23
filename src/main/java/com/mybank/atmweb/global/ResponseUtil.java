@@ -1,5 +1,6 @@
 package com.mybank.atmweb.global;
 
+import com.mybank.atmweb.dto.ApiResponse;
 import com.mybank.atmweb.global.code.ErrorCode;
 import com.mybank.atmweb.global.code.SuccessCode;
 import lombok.RequiredArgsConstructor;
@@ -19,20 +20,23 @@ public class ResponseUtil {
         this.messageUtil = messageUtil;
     }
 
-    public ResponseEntity<?> buildResponse(Enum<?> codeEnum, HttpStatus status, Map<String, Object> data) {
+    public <T> ResponseEntity<ApiResponse<T>> buildResponse(Enum<?> codeEnum, HttpStatus status, T data) {
         String messageKey = null;
+
         if (codeEnum instanceof ErrorCode ec) {
             messageKey = ec.getMessageKey();
         } else if (codeEnum instanceof SuccessCode sc) {
             messageKey = sc.getMessageKey();
         }
 
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("code", codeEnum.name());
-        body.put("message", messageUtil.getMessage(messageKey));
-        if (data != null && !data.isEmpty()) {
-            body.put("data", data);
-        }
+        String code = codeEnum.name();
+        String message = messageUtil.getMessage(messageKey);
+
+        ApiResponse<T> body = new ApiResponse<>(code, message, data);
         return ResponseEntity.status(status).body(body);
+    }
+
+    public ResponseEntity<ApiResponse<Void>> buildResponse(Enum<?> codeEnum, HttpStatus status) {
+        return buildResponse(codeEnum, status, null);
     }
 }
