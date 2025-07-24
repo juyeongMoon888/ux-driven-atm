@@ -1,6 +1,9 @@
-import { showValidationMessages, tryOnceToDetectRecovery } from "./lib/utils.js";
+import { showErrorMessagesFromServer, tryOnceToDetectRecovery } from "./lib/utils.js";
+import { validateUser } from "./lib/validation/validateUser.js";
 
-let signupForm, loginIdInput, passwordInput, nameInput, residentNumberInput, genderInput, phoneNumberInput, idCheckResult, checkLoginIdBtn;
+import { showFieldErrors } from "./lib/validation/renderFieldError.js";
+
+let signupForm, loginIdInput, passwordInput, emailInput, emailError, nameInput, residentNumberInput, genderInput, phoneNumberInput, idCheckResult, checkLoginIdBtn;
 
 document.addEventListener("DOMContentLoaded", main);
 
@@ -14,6 +17,7 @@ function initElements() {
     loginIdInput = document.getElementById("loginId");
     passwordInput = document.getElementById("password");
     nameInput = document.getElementById("name");
+    emailInput = document.getElementById("email");
     residentNumberInput = document.getElementById("residentNumber");
     genderInput = document.getElementById("gender");
     phoneNumberInput = document.getElementById("phoneNumber");
@@ -27,9 +31,9 @@ function bindEvents() {
 }
 
 async function handleSubmitSignup(e) {
-console.log("🔥 handleSubmitSignup 호출됨");
     e.preventDefault();
 
+    //통제 변수 유지
     if(signupForm.dataset.idChecked !== "true") {
         alert("아이디 중복 확인을 먼저 해주세요.");
         return;
@@ -38,12 +42,22 @@ console.log("🔥 handleSubmitSignup 호출됨");
     const user = {
         loginId: loginIdInput.value,
         password: passwordInput.value,
+        email:emailInput.value,
         name: nameInput.value,
         residentNumber: residentNumberInput.value,
         gender: genderInput.value,
         phoneNumber: phoneNumberInput.value
     };
-console.log("🔥 fetch 실행 전");
+
+    const start = performance.now();
+    const errors = validateUser(user);
+
+    if (errors) {
+        showFieldErrors(errors, ["loginId", "password", "email", "name", "residentNumber", "gender", "phoneNumber" ]);
+        const end = performance.now();
+        return;
+    }
+
     try {
         const res = await fetch("/api/users/signup", {
             method: "POST",
@@ -54,23 +68,35 @@ console.log("🔥 fetch 실행 전");
             redirect: "manual"
         });
 
-        const data = await res.json();
+       const text = await res.text();
 
+       let data = {};
+       try {
+           data = JSON.parse(text);
+       } catch (e) {
+           console.error("JSON 파싱 실패:", e);
+           alert("서버 응답이 올바르지 않습니다.");
+           return;
+       }
 
-        if (data.code === "SIGNUP_SUCCESS") {
-            alert(data.message || "회원가입 성공");
-            location.href="/login";
-        } else if (data.code ===  "DATA_INTEGRITY_VIOLATION") {
+        if (res.ok){
+            if (data.code === "SIGNUP_SUCCESS") {
+                alert(data.message || "회원가입 성공");
+                location.href="/login";
+            } else {
+                 alert(data.message || "회원가입 실패");
+            }
+
+        }
+        else if (data.code ===  "DATA_INTEGRITY_VIOLATION") {
             alert(data.message);
         }
         else if (data.code === "VALIDATION_FAILED"){
-            showValidationMessages(data.details);
+            showErrorMessagesFromServer(data.data);
         } else {
-            alert(data.message || "회원가입 실패");
+              alert(data.message || "알 수 없는 오류가 발생했습니다.");
         }
     } catch(err) {
-
-    console.error("❌ 에러 발생!", err);
         if (err instanceof TypeError && err.message === "Failed to fetch") {
             alert("서버와 연결할 수 없습니다. 인터넷 연결을 확인해주세요.");
             tryOnceToDetectRecovery();
