@@ -1,7 +1,7 @@
 export async function tryRefreshToken() {
     try {
         const res = await fetch("/api/token/refresh", {
-            method: "POST"
+            method: "POST",
             credentials: "include"
         });
 
