@@ -3,6 +3,8 @@ package com.mybank.atmweb.auth;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mybank.atmweb.global.ResponseUtil;
+import com.mybank.atmweb.global.code.ErrorCode;
 import com.mybank.atmweb.security.CustomUserDetailsService;
 import com.mybank.atmweb.service.TokenBlacklistService;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -33,6 +35,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final CustomUserDetailsService userDetailsService;
     private final RedisTemplate<String, String> redisTemplate;
     private final TokenBlacklistService tokenBlacklistService;
+    private final ResponseUtil responseUtil;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -51,7 +54,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 "/api/ping",
                 "/api/users/signup",
                 "/api/users/check-id",
-                "/api/auth/login"
+                "/api/auth/login",
+                "/actuator/**"
         );
 
         if (whitelist.contains(path) ||
@@ -60,7 +64,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 path.startsWith("/css") ||
                 path.startsWith("/api/auth") ||
                 path.startsWith("/images") ||
-                path.startsWith("/favicon.ico")
+                path.startsWith("/favicon.ico") ||
+                path.startsWith("/actuator")
         ) {
 
             filterChain.doFilter(request, response);
@@ -70,83 +75,48 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String authHeader = request.getHeader("Authorization");
 
         if (authHeader == null || authHeader.isBlank()) {
-            setUnauthorizedResponse(response, "AUTH_HEADER_MISSING", "Authorization 헤더가 없거나 형식이 올바르지 않습니다.");
+            responseUtil.writeHttpErrorResponse(response, ErrorCode.AUTH_HEADER_INVALID);
             return;
         }
         if (!authHeader.startsWith("Bearer ")) {
-            setUnauthorizedResponse(response, "MALFORMED_AUTH_HEADER", "Authorization 헤더가 없거나 형식이 올바르지 않습니다.");
+            responseUtil.writeHttpErrorResponse(response, ErrorCode.AUTH_HEADER_MALFORMED);
             return;
         }
 
         String token = authHeader.substring(7);
 
+        if (token != null) {
+            try {
+                String loginId = jwtUtil.getLoginIdFromToken(token);
+                Long userId = jwtUtil.getUserId(token);
 
-        try {
-            String loginId = jwtUtil.getLoginIdFromToken(token);
-            Long userId = jwtUtil.getUserId(token);
+                if (tokenBlacklistService.isBlacklisted(token)) {
+                    responseUtil.writeHttpErrorResponse(response, ErrorCode.TOKEN_BLACKLISTED);
+                    return;
+                }
 
-            if (tokenBlacklistService.isBlacklisted(token)) {
-                setUnauthorizedResponse(response, "TOKEN_BLACKLISTED", "이미 로그아웃된 토큰입니다.");
+                String redisToken = redisTemplate.opsForValue().get("accessToken:" + userId);
+                if (redisToken == null || !redisToken.equals(token)) {
+                    responseUtil.writeHttpErrorResponse(response, ErrorCode.TOKEN_LOGGED_OUT); //만료되었거나 서버에 저장되지 않은 토큰입니다.
+                    return;
+                }
+
+                UserDetails userDetails = userDetailsService.loadUserByUsername(loginId);
+                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+
+            } catch (ExpiredJwtException e) {
+                responseUtil.writeHttpErrorResponse(response, ErrorCode.TOKEN_EXPIRED);
                 return;
             }
 
-            String redisToken = redisTemplate.opsForValue().get("accessToken:" + userId);
-            if (redisToken == null || !redisToken.equals(token)) {
-                setUnauthorizedResponse(response,  "TOKEN_LOGGED_OUT", "만료되었거나 로그아웃된 토큰입니다.");
+            catch (JwtException e) {
+                responseUtil.writeHttpErrorResponse(response, ErrorCode.TOKEN_INVALID);
                 return;
             }
-
-            UserDetails userDetails = userDetailsService.loadUserByUsername(loginId);
-            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-
-        } catch (ExpiredJwtException e) {
-            setUnauthorizedResponse(response, "TOKEN_EXPIRED", "토큰이 만료되었습니다.");
-            return;
         }
-
-        catch (JwtException e) {
-            setUnauthorizedResponse(response, "TOKEN_INVALID", "유효하지 않거나 만료된 토큰입니다.");
-            return;
-        }
-
         filterChain.doFilter(request, response);
-    }
-
-    private void setUnauthorizedResponse(HttpServletResponse response, String errorCode, String message) {
-        log.error("setUnauthorizedResponse 중");
-        try {
-            SecurityContextHolder.clearContext();
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("application/json;charset=UTF-8");
-            Map<String, String> error = Map.of(
-                    "code", errorCode,
-                    "message", message
-            );
-            new ObjectMapper().writeValue(response.getWriter(), error);
-            response.flushBuffer();
-        } catch (JsonMappingException e) {
-            log.error("setUnauthorizedResponse 중 JSON 매핑 예외 발생: ", e);
-            fallbackSend(response);
-        } catch (JsonProcessingException e) {
-            log.error("setUnauthorizedResponse 중 JSON 매핑 예외 발생: ", e);
-            fallbackSend(response);
-        } catch (IOException e) {
-            log.error("Fallback 처리도 실패: ", e);
-        }
-    }
-
-    private void fallbackSend(HttpServletResponse response) {
-        try {
-            response.reset();
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("text/plain;charset=UTF-8");
-            response.getWriter().write("code=UNAUTHORIZED\nmessage=인증 실패 (fallback)");
-            response.flushBuffer();
-        } catch (IOException e) {
-            log.error("Fallback 응답도 실패", e);
-        }
     }
 }
 
