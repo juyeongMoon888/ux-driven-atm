@@ -1,7 +1,7 @@
 import { showErrorMessagesFromServer, tryOnceToDetectRecovery } from "./lib/utils.js";
 import { validateUser } from "./lib/validation/validateUser.js";
-
 import { showFieldErrors } from "./lib/validation/renderFieldError.js";
+import { fetchJsonSafe } from "./lib/fetchJsonSafe.js"
 
 let signupForm, loginIdInput, passwordInput, emailInput, emailError, nameInput, residentNumberInput, genderInput, phoneNumberInput, idCheckResult, checkLoginIdBtn;
 
@@ -59,42 +59,36 @@ async function handleSubmitSignup(e) {
     }
 
     try {
-        const res = await fetch("/api/users/signup", {
+        const res = await fetchJsonSafe("api/users/signup", {
             method: "POST",
             headers: {
-            "Content-Type": "application/json"
+                "Content-Type": "application/json"
             },
             body: JSON.stringify(user),
             redirect: "manual"
         });
 
-       const text = await res.text();
-
-       let data = {};
-       try {
-           data = JSON.parse(text);
-       } catch (e) {
-           console.error("JSON 파싱 실패:", e);
-           alert("서버 응답이 올바르지 않습니다.");
-           return;
-       }
+        if (res.raw) {
+            console.error("서버 응답이 JSON 형식이 아닙니다.");
+            alert("서버 응답이 올바르지 않습니다.");
+            return;
+        }
 
         if (res.ok){
-            if (data.code === "SIGNUP_SUCCESS") {
-                alert(data.message || "회원가입 성공");
+            if (res.code === "SIGNUP_SUCCESS") {
+                alert(res.message || "회원가입 성공");
                 location.href="/login";
             } else {
-                 alert(data.message || "회원가입 실패");
+                 alert(res.message || "회원가입 실패");
             }
-
         }
-        else if (data.code ===  "DATA_INTEGRITY_VIOLATION") {
-            alert(data.message);
+        else if (res.code ===  "DATA_INTEGRITY_VIOLATION") {
+            alert(res.message);
         }
-        else if (data.code === "VALIDATION_FAILED"){
-            showErrorMessagesFromServer(data.data);
+        else if (res.code === "VALIDATION_FAILED"){
+            showErrorMessagesFromServer(res.data);
         } else {
-              alert(data.message || "알 수 없는 오류가 발생했습니다.");
+              alert(res.message || "알 수 없는 오류가 발생했습니다.");
         }
     } catch(err) {
         if (err instanceof TypeError && err.message === "Failed to fetch") {
