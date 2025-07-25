@@ -1,6 +1,6 @@
 package com.mybank.atmweb.global.exception.user;
 
-import com.mybank.atmweb.global.exception.ErrorCode;
+import com.mybank.atmweb.global.code.ErrorCode;
 
 public class CustomException extends RuntimeException{
 
