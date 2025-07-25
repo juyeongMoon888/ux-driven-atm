@@ -42,8 +42,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain)
             throws ServletException, IOException {
-        System.out.println("🔍 Incoming path: " + request.getRequestURI());
-        System.out.println("Method: " + request.getMethod());
+
         String path = request.getRequestURI();
 
         //JWT 검사 제외 대상
@@ -73,6 +72,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         String authHeader = request.getHeader("Authorization");
+        System.out.println("authHeader: "+authHeader);
 
         if (authHeader == null || authHeader.isBlank()) {
             responseUtil.writeHttpErrorResponse(response, ErrorCode.AUTH_HEADER_INVALID);
