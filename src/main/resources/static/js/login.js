@@ -1,5 +1,6 @@
 import ApiError from "./errors/ApiError.js";
 import { showErrorMessagesFromServer, tryOnceToDetectRecovery } from "./lib/utils.js";
+import { fetchJsonSafe } from "./lib/fetchJsonSafe.js";
 
 document.addEventListener("DOMContentLoaded", main);
 let loginForm, loginIdInput, passwordInput;
@@ -27,8 +28,11 @@ async function handleLoginSubmit(e) {
         password: passwordInput.value
     };
 
+    let res;
+    let accessToken, userInfo;
+
     try {
-        const res = await fetch("/api/auth/login", {
+        res = await fetchJsonSafe("/api/auth/login", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -36,27 +40,25 @@ async function handleLoginSubmit(e) {
             body: JSON.stringify(user)
         });
 
-        const data = await res.json();
-
-        if (!res.ok) {
+        if (res.ok) {
+            accessToken = res.accessToken;
+            userInfo = res.user;
+            alert("로그인 성공!");
+        } else {
             await handleErrorResponse(res);
-            return;
         }
-
-        const { accessToken, user:userInfo } = data;
-        alert("로그인 성공!");
 
         localStorage.setItem("accessToken", accessToken);
         localStorage.setItem("user", JSON.stringify(userInfo));
         window.location.href = "/";
     } catch (err) {
-        handleNetworkOrApiError(err);
+        handleNetworkOrApiError(err, res);
     }
 }
 
-function handleNetworkOrApiError(err) {
+function handleNetworkOrApiError(err, res = {}) {
     if (err instanceof ApiError && err.code === "VALIDATION_FAILED") {
-        showValidationMessages(data.data);
+        showValidationMessages(res.data);
     } else if (err instanceof ApiError && err.code == "UNAUTHORIZED") {
         alert(err.message);
         location.href = "/login";
