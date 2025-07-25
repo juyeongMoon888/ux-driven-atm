@@ -1,23 +1,16 @@
-import { ERROR_MESSAGES } from "./constants/errorMessages.js"; // 또는 실제 경로
-/**
- * 서버에서 받은 필드별 오류 메시지를 DOM에 표시
- * @param {Object} data - { fieldName: errorMessage }
- */
+import { ERROR_MESSAGES } from "./constants/errorMessages.js";
+
 export function showErrorMessagesFromServer(data) {
     for (const field in data) {
         const code = data[field];
 
-        // 방어: ERROR_MESSAGES 객체가 정의되어 있는지 확인
-                if (typeof ERROR_MESSAGES === "undefined") {
-                    console.error("❌ ERROR_MESSAGES 객체가 정의되어 있지 않습니다!");
-                    return;
-                }
+        if (typeof ERROR_MESSAGES === "undefined") {
+            console.error("ERROR_MESSAGES 객체가 정의되어 있지 않습니다!");
+            return;
+        }
         const message = ERROR_MESSAGES[code] || "입력값이 올바르지 않습니다.";
-        console.log("📦 message 내용:", message);
         const errorEl = document.getElementById(`${field}-error`);
-        console.log("📦 errorEl 내용:", errorEl);
 
-        console.log(`[DEBUG] field=${field}, code=${code}, message=${message}, element=`, errorEl);
         if (errorEl) {
             errorEl.textContent = message;
             errorEl.style.color = "red";
