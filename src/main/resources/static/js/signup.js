@@ -1,7 +1,7 @@
 import { showErrorMessagesFromServer, tryOnceToDetectRecovery } from "./lib/utils.js";
 import { validateUser } from "./lib/validation/validateUser.js";
 import { showFieldErrors } from "./lib/validation/renderFieldError.js";
-import { fetchJsonSafe } from "./lib/fetchJsonSafe.js"
+import { fetchJsonSafe } from "./lib/fetchJsonSafe.js";
 
 let signupForm, loginIdInput, passwordInput, emailInput, emailError, nameInput, residentNumberInput, genderInput, phoneNumberInput, idCheckResult, checkLoginIdBtn;
 
