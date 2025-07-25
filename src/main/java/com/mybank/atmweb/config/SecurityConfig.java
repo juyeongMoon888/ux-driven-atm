@@ -21,8 +21,9 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        System.out.println("스프링 시큐리티 진입");
         http
-                .csrf(csrf->csrf.disable())
+                .csrf(csrf -> csrf.disable())
 
                 .authorizeHttpRequests((auth) -> auth
                         .requestMatchers(
@@ -36,6 +37,7 @@ public class SecurityConfig {
                                 "/api/auth/login")
                         .permitAll()
                         .requestMatchers("/js/**", "/css/**").permitAll()
+                        .requestMatchers("/api/users/me").authenticated() //이거 없으면 403에러뜸// 내용 정리하기
                         .anyRequest().denyAll()
                 )
                 .formLogin(login -> login
