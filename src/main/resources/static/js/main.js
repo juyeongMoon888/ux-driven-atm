@@ -72,7 +72,6 @@ function resetUIToLoggedOut() {
 }
 
 async function fetchMyInfo(accessToken) {
-    console.log("accessToken = ", accessToken)
     try {
         const res = await fetchWithAuth("/api/users/me");
 
