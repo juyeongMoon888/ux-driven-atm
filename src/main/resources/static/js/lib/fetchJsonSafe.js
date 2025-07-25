@@ -1,13 +1,13 @@
 export async function fetchJsonSafe(url, options = {}) {
     try {
         const res = await fetch(url, options);
-        const text = res.text();
+        const text = await res.text();
         let data = {};
 
         try {
             data = JSON.parse(text);
         } catch (e) {
-            console.error("파싱 실패", e)
+            console.error("파싱 실패", e);
             return { ok: res.ok, raw: text };
         }
         return { ok: res.ok, ...data };
