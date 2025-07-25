@@ -1,23 +1,36 @@
 package com.mybank.atmweb.dto;
 
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
-@Getter @Setter
+@Getter
+@Builder
 public class SignupForm {
-    @NotBlank(message="아이디는 필수입니다.")
+    @NotBlank(message = "{validation.login_id.required}")
     private String loginId;
-    @NotBlank(message="비밀번호는 필수입니다.")
+
+    @NotBlank(message="{validation.password.required}")
+    @Size(min = 8, message = "{validation.password.size}")
     private String password;
-    @NotBlank(message="이름은 필수입니다.")
+
+    @NotBlank(message = "{validation.email.required}")
+    @Email(message = "{validation.email.format}")
+    private String email;
+
+    @NotBlank(message="{validation.name.required}")
     private String name;
-    @NotBlank(message="주민등록번호는 필수입니다.")
-    @Size(min = 13, max = 13)
+
+    @NotBlank(message="{validation.resident_number.required}")
+    @Size(min = 13, max = 13, message = "{validation.resident_number.size}")
     private String residentNumber;
-    @NotBlank(message="성별은 필수입니다.")
+
+    @NotBlank(message="{validation.gender.required}")
     private String gender;
-    @NotBlank(message="전화번호는 필수입니다.")
+
+    @NotBlank(message="{validation.phone_number.required}")
+    @Pattern(regexp = "^\\d{10,11}$", message = "{validation.phone_number.pattern}")
     private String phoneNumber;
 }
