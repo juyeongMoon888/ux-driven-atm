@@ -3,7 +3,7 @@ package com.mybank.atmweb.service;
 import com.mybank.atmweb.domain.Role;
 import com.mybank.atmweb.domain.User;
 import com.mybank.atmweb.dto.SignupForm;
-import com.mybank.atmweb.global.exception.ErrorCode;
+import com.mybank.atmweb.global.code.ErrorCode;
 import com.mybank.atmweb.global.exception.user.CustomException;
 import com.mybank.atmweb.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +29,7 @@ public class UserService {
         user.setResidentNumber(form.getResidentNumber());
         user.setGender(form.getGender());
         user.setPhoneNumber(form.getPhoneNumber());
-        user.setRole(Role.USER); //일단 항상 USER
+        user.setRole(Role.USER);
 
         userRepository.save(user);
     }
