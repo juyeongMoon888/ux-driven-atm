@@ -18,9 +18,7 @@ public class JwtUtil {
 
     private static final String SECRET ="your-256-bit-secret-your-256-bit-secret";
     private static final Key SECRET_KEY = Keys.hmacShaKeyFor(SECRET.getBytes());
-    /*private static final long ACCESS_TOKEN_EXPIRE_MS = 1000 * 60 * 60;*/
-    private static final long ACCESS_TOKEN_EXPIRE_MS = 30 * 1000L;
-
+    private static final long ACCESS_TOKEN_EXPIRE_MS = 10 * 60 * 1000L;
     private static final long REFRESH_TOKEN_EXPIRE_MS = 1000L * 60 * 60 * 24 * 7;
 
     //	로그인 성공 시 JWT 생성
