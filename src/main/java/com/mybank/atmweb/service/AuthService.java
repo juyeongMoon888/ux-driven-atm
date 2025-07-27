@@ -15,31 +15,41 @@ import java.time.Duration;
 @Service
 @RequiredArgsConstructor
 public class AuthService {
+    private static final String ACCESS_TOKEN_PREFIX = "auth: accessToken:";
+    private static final String REFRESH_TOKEN_PREFIX = "auth: refreshToken:";
 
     public final RedisTemplate<String, String> redisTemplate;
     private final JwtUtil jwtUtil;
 
     public LoginResponse login(User user, HttpServletResponse response) {
+        //1. 토큰 생성
         String accessToken = jwtUtil.createAccessToken(user);
         String refreshToken = jwtUtil.createRefreshToken(user);
 
+        //2. 만료 시간 계산 (JWT exp 기반)
+        long now = System.currentTimeMillis();
+        long accessTokenTtl = jwtUtil.getExpirationMillis(accessToken);
+        long refreshTokenTtl = jwtUtil.getExpirationMillis(refreshToken);
+
+        //3. Redis 저장 (JWT TTL 동기화)
         redisTemplate.opsForValue().set(
-                "accessToken:" + user.getId(),
+                ACCESS_TOKEN_PREFIX + user.getId(),
                 accessToken,
-                Duration.ofDays(15)
+                Duration.ofDays(accessTokenTtl)
         );
 
         redisTemplate.opsForValue().set(
-                "refreshToken:" + user.getId(),
+                REFRESH_TOKEN_PREFIX + user.getId(),
                 refreshToken,
-                Duration.ofDays(7)
+                Duration.ofDays(refreshTokenTtl)
         );
 
+        // 4. RefreshToken을 HttpOnly Cookie로 전송
         ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
                 .httpOnly(true)
                 .secure(true)
                 .path("/")
-                .maxAge(Duration.ofDays(7))
+                .maxAge(Duration.ofMillis(refreshTokenTtl))
                 .build();
         response.addHeader("Set-Cookie", cookie.toString());
 
