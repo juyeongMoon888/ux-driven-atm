@@ -4,7 +4,7 @@
 Spring Boot와 JPA를 기반으로 로그인 및 JWT 인증 기능을 구현하였으며,  
 계좌 조회, 입금, 출금 기능은 추후 구현을 목표로 설계 중입니다.
 
-🔖 [포트폴리오 제출 버전]
+**🔖 [포트폴리오 제출 버전]**
 - 버전: [v2.0.0](https://github.com/juyeongMoon888/ux-driven-atm/releases/tag/v2.0.0)
 - 주요 기능:
   - 인증 및 인가 처리
