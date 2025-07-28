@@ -7,16 +7,16 @@ Spring Boot와 JPA를 기반으로 로그인 및 JWT 인증 기능을 구현하�
 🔖 [포트폴리오 제출 버전]
 - 버전: [v2.0.0](https://github.com/juyeongMoon888/ux-driven-atm/releases/tag/v2.0.0)
 - 주요 기능:
-  인증 및 인가 처리
-  - JWT 기반 인증 구조 설계 (AccessToken + RefreshToken)
-  - Redis에 블랙리스트 등록 → 로그아웃 토큰 무효화
-  - RedisCleaner 도입 → 서버 재시작 시 인증 상태 초기화
-  회원가입 및 유효성 검사
-  - ID 중복 확인 + 정적/동적 유효성 검사 분리 설계
-  - Validation 기반 사전 오류 차단 및 사용자 피드백 구조화
-  예외 처리 구조
-  - 커스텀 예외 흐름 + code/label 기반 응답 포맷 정립
-  - 에러 메시지 표현 책임 분리 → 클라이언트 일관 처리 가능
+  - 인증 및 인가 처리
+    - JWT 기반 인증 구조 설계 (AccessToken + RefreshToken)
+    - Redis에 블랙리스트 등록 → 로그아웃 토큰 무효화
+    - RedisCleaner 도입 → 서버 재시작 시 인증 상태 초기화
+  - 회원가입 및 유효성 검사
+    - ID 중복 확인 + 정적/동적 유효성 검사 분리 설계
+    - Validation 기반 사전 오류 차단 및 사용자 피드백 구조화
+  - 예외 처리 구조
+    - 커스텀 예외 흐름 + code/label 기반 응답 포맷 정립
+    - 에러 메시지 표현 책임 분리 → 클라이언트 일관 처리 가능
 
 📌 [포트폴리오 버전 변경 이력]
 v2.0.0 (2025.07.27)
