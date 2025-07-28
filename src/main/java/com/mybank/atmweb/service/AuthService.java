@@ -15,8 +15,8 @@ import java.time.Duration;
 @Service
 @RequiredArgsConstructor
 public class AuthService {
-    private static final String ACCESS_TOKEN_PREFIX = "auth: accessToken:";
-    private static final String REFRESH_TOKEN_PREFIX = "auth: refreshToken:";
+    public static final String ACCESS_TOKEN_PREFIX = "accessToken:";
+    public static final String REFRESH_TOKEN_PREFIX = "refreshToken:";
 
     public final RedisTemplate<String, String> redisTemplate;
     private final JwtUtil jwtUtil;
@@ -35,19 +35,19 @@ public class AuthService {
         redisTemplate.opsForValue().set(
                 ACCESS_TOKEN_PREFIX + user.getId(),
                 accessToken,
-                Duration.ofDays(accessTokenTtl)
+                Duration.ofMillis(accessTokenTtl)
         );
 
         redisTemplate.opsForValue().set(
                 REFRESH_TOKEN_PREFIX + user.getId(),
                 refreshToken,
-                Duration.ofDays(refreshTokenTtl)
+                Duration.ofMillis(refreshTokenTtl)
         );
 
         // 4. RefreshToken을 HttpOnly Cookie로 전송
         ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
                 .httpOnly(true)
-                .secure(true)
+                .secure(false) //true -> false 수정
                 .path("/")
                 .maxAge(Duration.ofMillis(refreshTokenTtl))
                 .build();
@@ -57,8 +57,8 @@ public class AuthService {
     }
 
     public void logout(String accessToken, Long userId) {
-        redisTemplate.delete("accessToken:" + userId);
-        redisTemplate.delete("refreshToken:" + userId);
+        redisTemplate.delete(ACCESS_TOKEN_PREFIX + userId);
+        redisTemplate.delete(REFRESH_TOKEN_PREFIX + userId);
     }
 
     public String findRefreshTokenFromCookies(Cookie[] cookies) {
