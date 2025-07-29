@@ -11,6 +11,7 @@ import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +38,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final TokenBlacklistService tokenBlacklistService;
     private final ResponseUtil responseUtil;
 
+
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
@@ -44,6 +46,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         String path = request.getRequestURI();
+        System.out.println("jwt필터 진입");
 
         //JWT 검사 제외 대상
         List<String> whitelist = List.of(
@@ -71,8 +74,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        String authHeader = request.getHeader("Authorization");
 
+        String token = null;
+
+        if (request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if ("accessToken".equals(cookie.getName())) {
+                    token = cookie.getValue();
+                    break;
+                }
+            }
+        }
+
+        // 1. Authorization 헤더 우선
+        String authHeader = request.getHeader("Authorization");
         if (authHeader == null || authHeader.isBlank()) {
             responseUtil.writeHttpErrorResponse(response, ErrorCode.AUTH_HEADER_INVALID);
             return;
@@ -81,10 +96,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             responseUtil.writeHttpErrorResponse(response, ErrorCode.AUTH_HEADER_MALFORMED);
             return;
         }
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            token = authHeader.substring(7);
+        }
 
-        String token = authHeader.substring(7);
+        // 2. 여전히 token 없으면 인증 실패
+        if (token == null || token.isBlank()) {
+            responseUtil.writeHttpErrorResponse(response, ErrorCode.AUTH_HEADER_INVALID);
+            return;
+        }
 
         if (token != null) {
+
             try {
                 String loginId = jwtUtil.getLoginIdFromToken(token);
                 Long userId = jwtUtil.getUserId(token);
