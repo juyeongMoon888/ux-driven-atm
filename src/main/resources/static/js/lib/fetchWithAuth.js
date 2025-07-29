@@ -19,9 +19,9 @@ export async function fetchWithAuth(url, options = {}) {
         headers: {
             ...(options.headers || {}),
             Authorization: `Bearer ${token}`
-        }
+        },
+        credentials: "include"
     });
-
 
     if (res.status === 401) {
         const newToken = await tryRefreshToken();
