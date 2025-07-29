@@ -23,9 +23,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Enumeration;
 import java.util.List;
-import java.util.Map;
+
+import static com.mybank.atmweb.service.AuthService.ACCESS_TOKEN_PREFIX;
 
 @Slf4j
 @Component
@@ -72,7 +72,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         String authHeader = request.getHeader("Authorization");
-        System.out.println("authHeader: "+authHeader);
 
         if (authHeader == null || authHeader.isBlank()) {
             responseUtil.writeHttpErrorResponse(response, ErrorCode.AUTH_HEADER_INVALID);
@@ -95,9 +94,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     return;
                 }
 
-                String redisToken = redisTemplate.opsForValue().get("accessToken:" + userId);
+                String redisToken = redisTemplate.opsForValue().get(ACCESS_TOKEN_PREFIX + userId);
                 if (redisToken == null || !redisToken.equals(token)) {
-                    responseUtil.writeHttpErrorResponse(response, ErrorCode.TOKEN_LOGGED_OUT); //만료되었거나 서버에 저장되지 않은 토큰입니다.
+                    responseUtil.writeHttpErrorResponse(response, ErrorCode.TOKEN_LOGGED_OUT);
                     return;
                 }
 
