@@ -22,6 +22,7 @@ export async function fetchWithAuth(url, options = {}) {
         }
     });
 
+
     if (res.status === 401) {
         const newToken = await tryRefreshToken();
 
