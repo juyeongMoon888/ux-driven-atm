@@ -91,12 +91,13 @@ public class JwtUtil {
         return expiration.getTime() - System.currentTimeMillis();
     }
 
-    private Claims extractAllClaims(String token) {
+    // 현재 미사용. 전체 Claims 추출용 메서드 (필요 시 복원 가능)
+    /*private Claims extractAllClaims(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(SECRET_KEY)
                 .build()
-                .parseClaimsJwt(token)
+                .parseClaimsJws(token)
                 .getBody();
-    }
+    }*/
 
 }
