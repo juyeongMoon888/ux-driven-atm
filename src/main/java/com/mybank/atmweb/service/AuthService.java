@@ -45,13 +45,21 @@ public class AuthService {
         );
 
         // 4. RefreshToken을 HttpOnly Cookie로 전송
-        ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
+        ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", refreshToken)
                 .httpOnly(true)
                 .secure(false) //로컬 한정
                 .path("/")
                 .maxAge(Duration.ofMillis(refreshTokenTtl))
                 .build();
-        response.addHeader("Set-Cookie", cookie.toString());
+        response.addHeader("Set-Cookie", refreshTokenCookie.toString());
+
+        ResponseCookie accessTokenCookie = ResponseCookie.from("accessToken", accessToken)
+                .httpOnly(true)
+                .secure(false) //로컬 한정
+                .path("/")
+                .maxAge(Duration.ofMillis(accessTokenTtl))
+                .build();
+        response.addHeader("Set-Cookie", accessTokenCookie.toString());
 
         return new LoginResponse(accessToken);
     }
