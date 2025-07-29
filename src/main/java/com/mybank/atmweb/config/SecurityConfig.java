@@ -1,7 +1,7 @@
 package com.mybank.atmweb.config;
 
-import com.mybank.atmweb.exception.CustomLoginFailureHandler;
 import com.mybank.atmweb.auth.JwtAuthenticationFilter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -9,19 +9,13 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+@RequiredArgsConstructor
 @Configuration
 public class SecurityConfig {
-    @Autowired
-    private CustomLoginFailureHandler customLoginFailureHandler;
     private final JwtAuthenticationFilter jwtFilter;
-
-    public SecurityConfig(JwtAuthenticationFilter jwtFilter) {
-        this.jwtFilter = jwtFilter;
-    }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        System.out.println("스프링 시큐리티 진입");
         http
                 .csrf(csrf -> csrf.disable())
 
@@ -37,7 +31,7 @@ public class SecurityConfig {
                                 "/api/auth/login")
                         .permitAll()
                         .requestMatchers("/js/**", "/css/**").permitAll()
-                        .requestMatchers("/api/users/me").authenticated() //이거 없으면 403에러뜸// 내용 정리하기
+                        .requestMatchers("/api/users/me").authenticated()
                         .anyRequest().denyAll()
                 )
                 .formLogin(login -> login
