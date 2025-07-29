@@ -47,7 +47,7 @@ public class AuthService {
         // 4. RefreshToken을 HttpOnly Cookie로 전송
         ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
                 .httpOnly(true)
-                .secure(false) //true -> false 수정
+                .secure(false) //로컬 한정
                 .path("/")
                 .maxAge(Duration.ofMillis(refreshTokenTtl))
                 .build();
