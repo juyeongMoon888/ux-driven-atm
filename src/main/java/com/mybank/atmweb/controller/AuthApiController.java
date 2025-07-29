@@ -29,6 +29,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
+import static com.mybank.atmweb.service.AuthService.REFRESH_TOKEN_PREFIX;
+
 @Slf4j
 @RequiredArgsConstructor
 @RestController
@@ -87,7 +89,7 @@ public class AuthApiController {
 
         Long userId = jwtUtil.getUserId(refreshToken);
 
-        String savedToken = redisTemplate.opsForValue().get("refreshToken:" + userId);
+        String savedToken = redisTemplate.opsForValue().get(REFRESH_TOKEN_PREFIX + userId);
         if (savedToken == null || !refreshToken.equals(savedToken)) {
             return responseUtil.buildResponse(ErrorCode.TOKEN_INVALID, HttpStatus.UNAUTHORIZED, null);
         }
