@@ -40,4 +40,7 @@ public class User {
      */
     @Column(nullable = false)
     private int retryCount = 0;
+
+    @OneToMany(mappedBy = "owner")
+    private List<Account> accounts;
 }
