@@ -2,17 +2,7 @@ import { tryRefreshToken } from "./tryRefreshToken.js";
 import { handleErrorResponse } from "./utils.js";
 
 export async function fetchWithAuth(url, options = {}) {
-    const token = localStorage.getItem("accessToken");
-
-    if (!token || token === "null" || token === "undefined") {
-        const newToken = await tryRefreshToken();
-        if (!newToken) {
-            localStorage.removeItem("accessToken");
-            window.location.href = "/login";
-            return null;
-        }
-        return fetchWithAuth(url, options);
-    }
+    let token = localStorage.getItem("accessToken");
 
     let res = await fetch(url, {
         ...options,
@@ -23,21 +13,25 @@ export async function fetchWithAuth(url, options = {}) {
         credentials: "include"
     });
 
+    //서버 요청 후 accessToken 만료 여부 감지됨
     if (res.status === 401) {
         const newToken = await tryRefreshToken();
 
         if (newToken) {
+        localStorage.setItem("accessToken", newToken);
             res = await fetch(url, {
                 ...options,
                 headers: {
                     ...(options.headers || {}),
                     Authorization: `Bearer ${newToken}`
-                }
+                },
+                credentials: "include"
             });
         } else {
             localStorage.removeItem("accessToken");
+            setTimeout(() => {
             window.location.href = "/login";
-            return null;
+            }, 5000);
         }
     }
 
