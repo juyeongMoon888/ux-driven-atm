@@ -77,7 +77,6 @@ public class AuthService {
                 return cookie.getValue();
             }
         }
-
         return null;
     }
 }
