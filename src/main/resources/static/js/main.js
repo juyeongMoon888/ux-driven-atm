@@ -1,10 +1,11 @@
 import ApiError from "./errors/ApiError.js";
 import { getAccessToken, getUserFromLocalStorage, tryOnceToDetectRecovery } from "./lib/utils.js"
 import { fetchWithAuth } from "./lib/fetchWithAuth.js"
+import { fetchJsonSafe } from "./lib/fetchJsonSafe.js"
 
 
 document.addEventListener("DOMContentLoaded", main);
-let loginBtn, logoutBtn, greetingEl;
+let loginBtn, logoutBtn, greetingEl, accountCreateBtn;
 
 function main () {
     initElement();
@@ -17,6 +18,7 @@ function initElement() {
     loginBtn = document.getElementById("loginBtn");
     logoutBtn = document.getElementById("logoutBtn");
     greetingEl = document.getElementById("greeting");
+    accountCreateBtn = document.getElementById("accountCreateBtn");
 }
 
 function initUI() {
@@ -35,23 +37,29 @@ function bindEvents() {
     logoutBtn.addEventListener("click", handleLogout);
 }
 
-function maybeFetchUserInfo() {
-    const accessToken = getAccessToken();
-    if (accessToken) fetchMyInfo(accessToken);
+async function maybeFetchUserInfo() {
+    try {
+        await fetchMyInfo();
+    } catch (err) {
+        console.log("유저 정보 확인 실패", err);
+    }
 }
 
 function setUIToLoggedIn() {
     loginBtn.style.display = "none";
     logoutBtn.style.display = "block";
+    accountCreateBtn.style.display = "block";
 }
 
 function setUIToLoggedOut() {
     loginBtn.style.display = "block";
     logoutBtn.style.display = "none";
+    accountCreateBtn.style.display = "none";
     if (greetingEl) {
         greetingEl.textContent = "";
     }
 }
+
 async function handleLogout() {
     try {
         await fetchWithAuth("/api/auth/logout", {
@@ -71,35 +79,43 @@ function resetUIToLoggedOut() {
     localStorage.removeItem("accessToken")
 }
 
-async function fetchMyInfo(accessToken) {
+async function fetchMyInfo() {
+        let res;
+        let parsed;
     try {
-        const res = await fetchWithAuth("/api/users/me");
-
-        if (res === null) {
+        res = await fetchWithAuth("/api/users/me");
+        if (!res) {
+            console.error("fetchWithAuth 응답이 null입니다.");
             return;
         }
-        if (res.ok) {
-            const user = await res.json();
-            greetingEl.textContent=`안녕하세요,${user.name}님`;
-            localStorage.setItem("user", JSON.stringify(user));
-        } else {
-            const errorData = await res.json();
+        parsed = await fetchJsonSafe(res);
+        const status = res.status;
 
-            if (res.status === 401) {
-                 throw new ApiError (errorData.code, errorData.message);
-            } else if (res.status === 500) {
+        if (parsed === null) {
+            return;
+        }
+        if (parsed.ok) {
+            greetingEl.textContent=`안녕하세요,${parsed.name}님`;
+            localStorage.setItem("user", JSON.stringify(parsed));
+        } else {
+            if (status === 401) {
+                 throw new ApiError (parsed.code, parsed.message);
+            } else if (status === 500) {
                 throw new Error ("서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
             } else {
-                throw new Error(`알 수 없는 오류 (code: ${res.status})`);
+                throw new Error(`알 수 없는 오류 (code: ${parsed.status})`);
             }
         }
     }
     catch (err) {
         resetUIToLoggedOut();
 
-        if (err instanceof ApiError && err.code === "SESSION_EXPIRED") {
+        if (err instanceof ApiError) {
             alert("세션이 만료되었습니다. 다시 로그인해주세요.");
-            location.href = "/login";
+            setTimeout(() => {
+            window.location.href = "/login";
+            }, 5000); // 1.5초 후 이동
+
         } else if (err instanceof TypeError && err.message === "Failed to fetch") {
             alert("서버가 꺼졌습니다. 복구를 기다립니다...");
             tryOnceToDetectRecovery(); // 서버 꺼졌을 때만 감시 시작
