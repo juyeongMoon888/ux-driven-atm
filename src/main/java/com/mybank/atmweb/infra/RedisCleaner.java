@@ -18,9 +18,14 @@ public class RedisCleaner implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
-        Set<String> keys = redisTemplate.keys("accessToken:*");
-        if (keys != null && !keys.isEmpty()) {
-            redisTemplate.delete(keys);
+        Set<String> accessTokenKeys = redisTemplate.keys("accessToken:*");
+        Set<String> refreshTokenKeys = redisTemplate.keys("refreshToken:*");
+        if (accessTokenKeys != null && !accessTokenKeys.isEmpty()) {
+            redisTemplate.delete(accessTokenKeys);
+        }
+        if (refreshTokenKeys != null && !refreshTokenKeys.isEmpty()) {
+            redisTemplate.delete(refreshTokenKeys);
         }
     }
 }
+
