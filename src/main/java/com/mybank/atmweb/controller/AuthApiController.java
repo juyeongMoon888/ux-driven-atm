@@ -2,7 +2,7 @@ package com.mybank.atmweb.controller;
 
 import com.mybank.atmweb.domain.User;
 import com.mybank.atmweb.dto.LoginRequest;
-import com.mybank.atmweb.dto.LoginResponse;
+import com.mybank.atmweb.dto.TokenDto;
 import com.mybank.atmweb.global.MessageUtil;
 import com.mybank.atmweb.global.ResponseUtil;
 import com.mybank.atmweb.global.code.ErrorCode;
@@ -22,6 +22,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
@@ -30,9 +31,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
-import static com.mybank.atmweb.service.AuthService.ACCESS_TOKEN_PREFIX;
 import static com.mybank.atmweb.service.AuthService.REFRESH_TOKEN_PREFIX;
 
 @Slf4j
@@ -41,7 +40,6 @@ import static com.mybank.atmweb.service.AuthService.REFRESH_TOKEN_PREFIX;
 @RequestMapping("/api/auth")
 public class AuthApiController {
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final TokenBlacklistService tokenBlacklistService;
     private final AuthService authService;
@@ -52,21 +50,34 @@ public class AuthApiController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request, HttpServletResponse response) {
         // 1. 아이디로 사용자 조회
-        User user = userRepository.findByLoginId(request.getLoginId())
-                .orElseThrow(() -> new CustomException(ErrorCode.INVALID_CREDENTIALS));
+        User user = authService.findUserByLoginIdOrThrow(request.getLoginId());
 
         // 2. 비밀번호 검증
-        String rawPassword = request.getPassword();
-        if (!passwordEncoder.matches(rawPassword, user.getPassword()))  {
-            throw new CustomException(ErrorCode.INVALID_CREDENTIALS);
-        }
+        authService.validatePassword(request.getPassword(), user.getPassword());
 
-        //3. 로그인 성공 시
-        LoginResponse accessToken = authService.login(user, response);
+        //3. 토큰 발급 및 redis 저장
+        TokenDto tokens = authService.issueTokens(user);
 
-        //4. 토큰을 JSON 바디로 응답
+        //4. 토큰 쿠키로 저장
+        ResponseCookie accessTokenCookie = ResponseCookie.from("accessToken", tokens.getAccessToken())
+                .httpOnly(true)
+                .secure(false)
+                .path("/")
+                .maxAge(Duration.ofMillis(tokens.getAccessTokenTtl()))
+                .build();
+        response.addHeader("Set-Cookie", accessTokenCookie.toString());
+
+        ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", tokens.getRefreshToken())
+                .httpOnly(true)
+                .secure(false)
+                .path("/")
+                .maxAge(Duration.ofMillis(tokens.getRefreshTokenTtl()))
+                .build();
+        response.addHeader("Set-Cookie", refreshTokenCookie.toString());
+
+        //5. 토큰을 JSON 바디로 응답
         return ResponseEntity.ok(Map.of(
-                "accessToken", accessToken.getAccessToken(),
+                "accessToken", tokens.getAccessToken(),
                 "user", Map.of(
                         "id", user.getId(),
                         "name", user.getName()
@@ -103,8 +114,6 @@ public class AuthApiController {
 
         // 3. userId 추출
         Long userId = jwtUtil.getUserId(refreshToken);
-        System.out.println("✅userId = " + userId);
-
 
         // 4. Redis 저장값과 비교
         String savedToken = redisTemplate.opsForValue().get(REFRESH_TOKEN_PREFIX + userId);
@@ -112,51 +121,64 @@ public class AuthApiController {
             return responseUtil.buildResponse(ErrorCode.TOKEN_INVALID, HttpStatus.UNAUTHORIZED, null);
         }
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        User user = authService.findUserByIdOrThrow(userId);
 
-        String newAccessToken = jwtUtil.createAccessToken(user);
-        System.out.println("🔥newAccessToken = " + newAccessToken);
-
-        //5. 재발급 토큰을 redis에 저장
-        long newAccessTokenTtl = jwtUtil.getExpirationMillis(newAccessToken);
-        redisTemplate.opsForValue().set(
-                ACCESS_TOKEN_PREFIX + user.getId(),
-                newAccessToken,
-                Duration.ofMillis(newAccessTokenTtl)
-        );
-
-        ResponseCookie accessTokenCookie = ResponseCookie.from("accessToken", newAccessToken)
+        //5. 재발급 토큰 생성 및 쿠키 저장
+        TokenDto newTokens = authService.refresh(user);
+        ResponseCookie newAccessToken = ResponseCookie.from("accessToken", newTokens.getAccessToken())
                 .httpOnly(true)
                 .secure(false)
                 .path("/")
-                .maxAge(Duration.ofMillis(jwtUtil.getExpirationMillis(newAccessToken)))
+                .maxAge(Duration.ofMillis(newTokens.getAccessTokenTtl()))
                 .build();
-        response.addHeader("Set-Cookie", accessTokenCookie.toString());
+        response.addHeader("Set-Cookie", newAccessToken.toString());
 
         return ResponseEntity.ok(Map.of(
                 "code", SuccessCode.ACCESS_TOKEN_REISSUED.name(),
                 "message", messageUtil.getMessage(SuccessCode.ACCESS_TOKEN_REISSUED.getMessageKey()),
                 "data", Map.of(
-                        "accessToken", newAccessToken
+                        "accessToken", newTokens.getAccessToken()
                 )
         ));
     }
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(HttpServletRequest request) {
+    public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
+        System.out.println("✅logout 진입");
         String token = jwtUtil.extractToken(request);
-
+        System.out.println(">>>logouttoken:"+token);
         if (token != null) {
+            System.out.println("✅token != null = " + token != null);
             try {
                 jwtUtil.validateToken(token);
                 Long ttl = jwtUtil.getExpirationMillis(token);
+                System.out.println("ttl = " + ttl);
                 tokenBlacklistService.blacklistToken(token, ttl);
                 Long userId = jwtUtil.getUserId(token);
-                authService.logout(token, userId);
+                authService.logout(userId);
+
+                //쿠키 제거 //maxAge가 0인 쿠키를 응답하는건가?
+                ResponseCookie accessTokenCookie = ResponseCookie.from("accessToken", "")
+                        .httpOnly(true)
+                        .secure(false)
+                        .path("/")
+                        .maxAge(0)
+                        .sameSite("Lax")
+                        .build();
+                response.addHeader(HttpHeaders.SET_COOKIE, accessTokenCookie.toString());
+
+                ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", "")
+                        .httpOnly(true)
+                        .secure(false)
+                        .path("/")
+                        .maxAge(0)
+                        .sameSite("Lax")
+                        .build();
+                response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
             } catch (JwtException e) {
                 log.warn("유효하지 않은 JWT: {}", e.getMessage());
             }
         }
+
         return responseUtil.buildResponse(SuccessCode.LOGOUT_SUCCESS, HttpStatus.OK, null);
     }
 
