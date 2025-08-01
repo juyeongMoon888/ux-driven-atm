@@ -1,8 +1,10 @@
 package com.mybank.atmweb.controller;
 
+import com.mybank.atmweb.domain.BankType;
 import com.mybank.atmweb.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
 @Controller
@@ -29,9 +31,16 @@ public class PageController {
         return "signup";
     }
 
-    //입출금 페이지
-    @GetMapping("/banking")
-    public String bankingPage() {
-        return "banking";
+    //계좌 개설
+    @GetMapping("/accounts")
+    public String accountsForm(Model model) {
+        model.addAttribute("bankTypes", BankType.values());
+        return "accounts";
+    }
+
+    //입출금
+    @GetMapping("/transactions")
+    public String transactionForm() {
+        return "transactions";
     }
 }
