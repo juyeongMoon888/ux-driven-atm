@@ -3,6 +3,7 @@ package com.mybank.atmweb.auth;
 import com.mybank.atmweb.domain.User;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +19,7 @@ public class JwtUtil {
 
     private static final String SECRET ="your-256-bit-secret-your-256-bit-secret";
     private static final Key SECRET_KEY = Keys.hmacShaKeyFor(SECRET.getBytes());
-    private static final long ACCESS_TOKEN_EXPIRE_MS = 10 * 60 * 1000L;
+    private static final long ACCESS_TOKEN_EXPIRE_MS = 10 * 1000L; // 테스트중 10초
     private static final long REFRESH_TOKEN_EXPIRE_MS = 1000L * 60 * 60 * 24 * 7;
 
     //	로그인 성공 시 JWT 생성
@@ -55,10 +56,11 @@ public class JwtUtil {
     }
 
     public String extractToken(HttpServletRequest request) {
-        String bearerToken = request.getHeader("Authorization");
-
-        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
-            return bearerToken.substring(7);
+        Cookie[] cookies = request.getCookies();
+        for (Cookie cookie : cookies) {
+            if ("accessToken".equals(cookie.getName())) {
+                return cookie.getValue();
+            }
         }
         return null;
     }
