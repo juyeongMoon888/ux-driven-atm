@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>계좌 개설</title>
+</head>
+<body>
+  <form id="accountForm"></form>
+<script type="module" src="/js/accounts.js"></script>
+  <div class="col-md-6">
+    <label for="bankSelect" class="form-label">은행</label>
+    <select name="bank" id="bankSelect" class="form-select" />
+    <option value="">--은행 선택--</option>
+      <th:block th:each="bank : ${bankTypes}">
+          <option th:value="${bank.name}" th:text="${bank.displayName}"></option>
+      </th:block>
+    </select>
+  </div>
+</body>
+</html>
