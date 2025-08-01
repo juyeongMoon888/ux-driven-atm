@@ -2,12 +2,14 @@ package com.mybank.atmweb.service;
 
 import com.mybank.atmweb.auth.JwtUtil;
 import com.mybank.atmweb.domain.User;
-import com.mybank.atmweb.dto.LoginResponse;
+import com.mybank.atmweb.dto.TokenDto;
+import com.mybank.atmweb.global.code.ErrorCode;
+import com.mybank.atmweb.global.exception.user.CustomException;
+import com.mybank.atmweb.repository.UserRepository;
 import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.http.ResponseCookie;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -20,51 +22,43 @@ public class AuthService {
 
     public final RedisTemplate<String, String> redisTemplate;
     private final JwtUtil jwtUtil;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public LoginResponse login(User user, HttpServletResponse response) {
-        //1. 토큰 생성
-        String accessToken = jwtUtil.createAccessToken(user);
-        String refreshToken = jwtUtil.createRefreshToken(user);
+    public TokenDto issueTokens(User user) {
+       TokenDto tokens = TokenDto.createFromUser(user, jwtUtil);
 
-        //2. 만료 시간 계산 (JWT exp 기반)
-        long now = System.currentTimeMillis();
-        long accessTokenTtl = jwtUtil.getExpirationMillis(accessToken);
-        long refreshTokenTtl = jwtUtil.getExpirationMillis(refreshToken);
+       redisTemplate.opsForValue().set(
+               ACCESS_TOKEN_PREFIX + user.getId(),
+               tokens.getAccessToken(),
+               Duration.ofMillis(tokens.getAccessTokenTtl())
+       );
 
-        //3. Redis 저장 (JWT TTL 동기화)
-        redisTemplate.opsForValue().set(
-                ACCESS_TOKEN_PREFIX + user.getId(),
-                accessToken,
-                Duration.ofMillis(accessTokenTtl)
-        );
+       redisTemplate.opsForValue().set(
+               REFRESH_TOKEN_PREFIX + user.getId(),
+               tokens.getRefreshToken(),
+               Duration.ofMillis(tokens.getRefreshTokenTtl())
+       );
 
-        redisTemplate.opsForValue().set(
-                REFRESH_TOKEN_PREFIX + user.getId(),
-                refreshToken,
-                Duration.ofMillis(refreshTokenTtl)
-        );
-
-        // 4. RefreshToken을 HttpOnly Cookie로 전송
-        ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", refreshToken)
-                .httpOnly(true)
-                .secure(false) //로컬 한정
-                .path("/")
-                .maxAge(Duration.ofMillis(refreshTokenTtl))
-                .build();
-        response.addHeader("Set-Cookie", refreshTokenCookie.toString());
-
-        ResponseCookie accessTokenCookie = ResponseCookie.from("accessToken", accessToken)
-                .httpOnly(true)
-                .secure(false) //로컬 한정
-                .path("/")
-                .maxAge(Duration.ofMillis(accessTokenTtl))
-                .build();
-        response.addHeader("Set-Cookie", accessTokenCookie.toString());
-
-        return new LoginResponse(accessToken);
+        return tokens;
     }
 
-    public void logout(String accessToken, Long userId) {
+    public User findUserByLoginIdOrThrow(String loginId) {
+        return userRepository.findByLoginId(loginId)
+                .orElseThrow(() -> new CustomException(ErrorCode.INVALID_CREDENTIALS));
+    }
+    public User findUserByIdOrThrow(Long id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+    }
+
+    public void validatePassword(String rawPassword, String password) {
+        if (!passwordEncoder.matches(rawPassword, password)) {
+            throw new CustomException(ErrorCode.INVALID_CREDENTIALS);
+        }
+    }
+
+    public void logout(Long userId) {
         redisTemplate.delete(ACCESS_TOKEN_PREFIX + userId);
         redisTemplate.delete(REFRESH_TOKEN_PREFIX + userId);
     }
@@ -78,5 +72,16 @@ public class AuthService {
             }
         }
         return null;
+    }
+
+    public TokenDto refresh(User user) {
+        TokenDto newTokens = TokenDto.createFromUser(user, jwtUtil);
+        System.out.println("🔥재발급 완료="+newTokens.getAccessToken());
+        redisTemplate.opsForValue().set(
+                ACCESS_TOKEN_PREFIX + user.getId(),
+                newTokens.getAccessToken(),
+                Duration.ofMillis(newTokens.getAccessTokenTtl())
+        );
+        return newTokens;
     }
 }
