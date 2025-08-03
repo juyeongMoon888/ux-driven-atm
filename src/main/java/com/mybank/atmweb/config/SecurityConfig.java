@@ -24,14 +24,21 @@ public class SecurityConfig {
                                 "/",
                                 "/login",
                                 "/signup",
+                                "/main",
                                 "/error",
                                 "/api/ping",
                                 "/api/users/signup",
                                 "/api/users/check-id",
-                                "/api/auth/login")
+                                "/api/auth/login",
+                                "/api/auth/token/refresh",
+                                "/api/auth/logout")
                         .permitAll()
-                        .requestMatchers("/js/**", "/css/**").permitAll()
-                        .requestMatchers("/api/users/me").authenticated()
+                        .requestMatchers("/js/**", "/css/**", "/favicon.ico").permitAll()
+                        .requestMatchers(
+                                "/api/users/me",
+                                "/accounts",
+                                "/api/accounts"
+                        ).authenticated()
                         .anyRequest().denyAll()
                 )
                 .formLogin(login -> login
