@@ -2,9 +2,14 @@ package com.mybank.atmweb.domain;
 
 import jakarta.persistence.*;
 import jakarta.transaction.Transactional;
+import lombok.Builder;
+import lombok.Getter;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
+@Builder
+@Getter
 @Entity @Transactional
 public class Account {
 
@@ -12,7 +17,7 @@ public class Account {
     private Long id;
 
     private String accountNumber;
-    private String accountName; //계좌명
+    private String accountName;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
@@ -22,5 +27,10 @@ public class Account {
 
     private Long balance;
 
+    @CreationTimestamp
     private LocalDateTime createAt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name="bank")
+    private BankType bank;
 }
