@@ -26,7 +26,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
@@ -64,6 +63,7 @@ public class AuthApiController {
                 .secure(false)
                 .path("/")
                 .maxAge(Duration.ofMillis(tokens.getAccessTokenTtl()))
+                .sameSite("Lax")
                 .build();
         response.addHeader("Set-Cookie", accessTokenCookie.toString());
 
@@ -72,6 +72,7 @@ public class AuthApiController {
                 .secure(false)
                 .path("/")
                 .maxAge(Duration.ofMillis(tokens.getRefreshTokenTtl()))
+                .sameSite("Lax")
                 .build();
         response.addHeader("Set-Cookie", refreshTokenCookie.toString());
 
@@ -88,7 +89,7 @@ public class AuthApiController {
     public ResponseEntity<?> refreshToken(HttpServletRequest request, HttpServletResponse response) {
         System.out.println("✅refreshToken 진입");
         Cookie[] cookies = request.getCookies();
-        String refreshToken = authService.findRefreshTokenFromCookies(cookies);
+        String refreshToken = authService.findRefreshTokenFromCookies(cookies);//@CookieValue로 생략될 부분
 
         //1. 쿠키에 refreshToken이 존재하지 않으면 재발급 불가
         if (refreshToken == null) {
@@ -143,15 +144,11 @@ public class AuthApiController {
     }
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
-        System.out.println("✅logout 진입");
         String token = jwtUtil.extractToken(request);
-        System.out.println(">>>logouttoken:"+token);
         if (token != null) {
-            System.out.println("✅token != null = " + token != null);
             try {
                 jwtUtil.validateToken(token);
                 Long ttl = jwtUtil.getExpirationMillis(token);
-                System.out.println("ttl = " + ttl);
                 tokenBlacklistService.blacklistToken(token, ttl);
                 Long userId = jwtUtil.getUserId(token);
                 authService.logout(userId);
