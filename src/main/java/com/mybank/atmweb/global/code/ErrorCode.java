@@ -16,7 +16,8 @@ public enum ErrorCode implements BaseCode{
     AUTH_HEADER_INVALID("error.auth_header_invalid", HttpStatus.UNAUTHORIZED),
     AUTH_HEADER_MALFORMED("error.auth_header_malformed", HttpStatus.UNAUTHORIZED),
     TOKEN_BLACKLISTED("error.token_blacklisted", HttpStatus.UNAUTHORIZED),
-    TOKEN_LOGGED_OUT("error.token_logged_out", HttpStatus.UNAUTHORIZED)
+    TOKEN_LOGGED_OUT("error.token_logged_out", HttpStatus.UNAUTHORIZED),
+    BANK_INVALID("error.bank_invalid", HttpStatus.BAD_REQUEST),
     ;
 
     private final String messageKey;
