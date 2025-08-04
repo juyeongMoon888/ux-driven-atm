@@ -1,20 +1,38 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymleaf.org">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <title>계좌 개설</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-  <form id="accountForm"></form>
-<script type="module" src="/js/accounts.js"></script>
-  <div class="col-md-6">
-    <label for="bankSelect" class="form-label">은행</label>
-    <select name="bank" id="bankSelect" class="form-select" />
-    <option value="">--은행 선택--</option>
-      <th:block th:each="bank : ${bankTypes}">
-          <option th:value="${bank.name}" th:text="${bank.displayName}"></option>
-      </th:block>
-    </select>
-  </div>
+  <form id="accountForm">
+      <div class="col-md-6">
+          <label for="bankSelect" class="form-label">은행</label>
+          <select name="bank" id="bankSelect" class="form-select">
+          <option value="">--은행 선택--</option>
+          <th:block th:each="bank : ${bankTypes}">
+              <option th:value="${bank.name}" th:text="${bank.displayName}"></option>
+          </th:block>
+          </select>
+          <span id="bankSelect-error"></span>
+      </div>
+      <div class="col-md-6">
+          <label for="password" class="form-label">비밀번호</label>
+          <input type="text" id="password" class="form-control"/>
+          <span id="password-error"></span>
+      </div>
+
+      <div class="col-md-6">
+          <label for="accountName" class="form-l  abel">계좌명</label>
+          <input type="text" id="accountName" class="form-control"/>
+      </div>
+
+      <div class="col-12">
+          <button type="submit" class="bth btn-primary">개설하기</button>
+      </div>
+
+  </form>
+  <script type="module" src="/js/accounts.js"></script>
 </body>
 </html>
