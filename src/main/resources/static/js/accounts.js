@@ -46,6 +46,7 @@ async function handleSubmitAccount(e) {
             }
         } else {
             alert(parsed.message || "계좌생성이 완료되었습니다.")
+            location.href = "/bank";
         }
 
     } catch (err) {
