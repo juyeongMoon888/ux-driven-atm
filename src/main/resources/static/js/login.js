@@ -20,6 +20,9 @@ function bindEvents() {
     loginForm.addEventListener("submit", handleLoginSubmit);
 }
 
+let res, parsed;
+    let accessToken, userInfo;
+
 async function handleLoginSubmit(e) {
     e.preventDefault();
 
@@ -28,11 +31,8 @@ async function handleLoginSubmit(e) {
         password: passwordInput.value
     };
 
-    let res;
-    let accessToken, userInfo;
-
     try {
-        res = await fetchJsonSafe("/api/auth/login", {
+        res = await fetch("/api/auth/login", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -40,25 +40,29 @@ async function handleLoginSubmit(e) {
             body: JSON.stringify(user)
         });
 
-        if (res.ok) {
-            accessToken = res.accessToken;
-            userInfo = res.user;
-            alert("로그인 성공!");
-        } else {
-            await handleErrorResponse(res);
-        }
+        parsed = await fetchJsonSafe(res);
 
-        localStorage.setItem("accessToken", accessToken);
-        localStorage.setItem("user", JSON.stringify(userInfo));
-        window.location.href = "/";
-    } catch (err) {
-        handleNetworkOrApiError(err, res);
-    }
+            if (parsed.ok) {
+                accessToken = parsed.accessToken;
+                userInfo = parsed.user;
+                console.log("userInfo", userInfo);
+                alert("로그인 성공!");
+            } else {
+                await handleErrorResponse(parsed);
+            }
+
+            localStorage.setItem("accessToken", accessToken);
+            localStorage.setItem("user", JSON.stringify(userInfo));
+            window.location.href = "/";
+        } catch (err) {
+            console.error("[로그인 예외 발생]=", err);
+            handleNetworkOrApiError(err, parsed);
+        }
 }
 
-function handleNetworkOrApiError(err, res = {}) {
+function handleNetworkOrApiError(err, parsed = {}) {
     if (err instanceof ApiError && err.code === "VALIDATION_FAILED") {
-        showValidationMessages(res.data);
+        showValidationMessages(parsed.data);
     } else if (err instanceof ApiError && err.code == "UNAUTHORIZED") {
         alert(err.message);
         location.href = "/login";
