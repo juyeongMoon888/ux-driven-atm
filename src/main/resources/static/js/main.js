@@ -5,7 +5,7 @@ import { fetchJsonSafe } from "./lib/fetchJsonSafe.js"
 
 
 document.addEventListener("DOMContentLoaded", main);
-let loginBtn, logoutBtn, greetingEl, accountCreateBtn;
+let loginBtn, logoutBtn, greetingEl, bankBtn;
 
 function main () {
     initElement();
@@ -18,7 +18,7 @@ function initElement() {
     loginBtn = document.getElementById("loginBtn");
     logoutBtn = document.getElementById("logoutBtn");
     greetingEl = document.getElementById("greeting");
-    accountCreateBtn = document.getElementById("accountCreateBtn");
+    bankBtn = document.getElementById("bankBtn");
 }
 
 function initUI() {
@@ -33,11 +33,31 @@ function initUI() {
     }
 }
 
+
 function bindEvents() {
-    logoutBtn.addEventListener("click", handleLogout);
+    if (loginBtn) {
+        loginBtn.addEventListener("click", goToLogin);
+    } else {
+        console.warn("loginBtn이 존재하지 않음 - 이벤트 바인딩 실패");
+    }
+
+    if (logoutBtn) {
+        console.log("logoutBtn 바인딩 시도함")
+        logoutBtn.addEventListener("click", handleLogout);
+    } else {
+        console.warn("logoutBtn이 존재하지 않음 - 이벤트 바인딩 실패");
+    }
+
+    if (bankBtn) {
+        console.log("bankBtn 바인딩 시도함")
+        bankBtn.addEventListener("click", checkTokenBeforeEnteringBank);
+    } else {
+        console.warn("bankBtn이 존재하지 않음 - 이벤트 바인딩 실패");
+    }
 }
 
 async function maybeFetchUserInfo() {
+    console.log("maybeFetchUserInfo 진입")
     try {
         await fetchMyInfo();
     } catch (err) {
@@ -48,28 +68,35 @@ async function maybeFetchUserInfo() {
 function setUIToLoggedIn() {
     loginBtn.style.display = "none";
     logoutBtn.style.display = "block";
-    accountCreateBtn.style.display = "block";
+    bankBtn.style.display = "block";
 }
 
 function setUIToLoggedOut() {
     loginBtn.style.display = "block";
     logoutBtn.style.display = "none";
-    accountCreateBtn.style.display = "none";
     if (greetingEl) {
         greetingEl.textContent = "";
     }
+    bankBtn.style.display = "none";
 }
 
 async function handleLogout() {
+    console.log("handleLogout 진입");
     try {
         await fetchWithAuth("/api/auth/logout", {
-           method: "POST"
+           method: "POST",
+           credentials: "include"
         });
     } catch (err) {
         console.warn("서버 로그아웃 실패", err);
     } finally {
         localStorage.removeItem("accessToken");
         localStorage.removeItem("user");
+
+        //UI 초기화: greeting 메시지, 버튼 상태 등
+        resetUIToLoggedOut();
+
+        //페이지 새로고침 또는 리다이렉트
         location.reload();
     }
 }
@@ -80,6 +107,7 @@ function resetUIToLoggedOut() {
 }
 
 async function fetchMyInfo() {
+    console.log("fetchMyInfo 진입")
         let res;
         let parsed;
     try {
@@ -91,6 +119,7 @@ async function fetchMyInfo() {
         parsed = await fetchJsonSafe(res);
         const status = res.status;
 
+        //refactor: json이 안오더라도 null은 아니기 때문에 이 코드는 지워야함.
         if (parsed === null) {
             return;
         }
@@ -114,7 +143,7 @@ async function fetchMyInfo() {
             alert("세션이 만료되었습니다. 다시 로그인해주세요.");
             setTimeout(() => {
             window.location.href = "/login";
-            }, 5000); // 1.5초 후 이동
+            }, 5000);
 
         } else if (err instanceof TypeError && err.message === "Failed to fetch") {
             alert("서버가 꺼졌습니다. 복구를 기다립니다...");
@@ -124,6 +153,26 @@ async function fetchMyInfo() {
         }
     };
 }
+async function checkTokenBeforeEnteringBank() {
+    try {
+        const res = await fetchWithAuth("/api/auth/check", {
+            method: "GET",
+            credentials: "include"
+        })
+
+        if (res.ok) {
+            location.href = "/bank";
+        } else {
+            location.href = "/login";
+        }
+    } catch (err) {
+        console.log("요청 실패", err);
+    }
+}
+function goToLogin() {
+    location.href = "/login";
+}
+
 
 
 
