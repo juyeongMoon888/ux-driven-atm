@@ -59,36 +59,36 @@ async function handleSubmitSignup(e) {
     }
 
     try {
-        const res = await fetchJsonSafe("api/users/signup", {
+        const res = await fetch("/api/users/signup", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify(user),
-            redirect: "manual"
+            body: JSON.stringify(user)
         });
+        const parsed = await fetchJsonSafe(res);
 
-        if (res.raw) {
+        if (parsed.raw) {
             console.error("서버 응답이 JSON 형식이 아닙니다.");
             alert("서버 응답이 올바르지 않습니다.");
             return;
         }
 
-        if (res.ok){
-            if (res.code === "SIGNUP_SUCCESS") {
-                alert(res.message || "회원가입 성공");
+        if (parsed.ok){
+            if (parsed.code === "SIGNUP_SUCCESS") {
+                alert(parsed.message || "회원가입 성공");
                 location.href="/login";
             } else {
-                 alert(res.message || "회원가입 실패");
+                 alert(parsed.message || "회원가입 실패");
             }
         }
-        else if (res.code ===  "DATA_INTEGRITY_VIOLATION") {
+        else if (parsed.code ===  "DATA_INTEGRITY_VIOLATION") {
             alert(res.message);
         }
-        else if (res.code === "VALIDATION_FAILED"){
-            showErrorMessagesFromServer(res.data);
+        else if (parsed.code === "VALIDATION_FAILED"){
+            showErrorMessagesFromServer(parsed.data);
         } else {
-              alert(res.message || "알 수 없는 오류가 발생했습니다.");
+              alert(parsed.message || "알 수 없는 오류가 발생했습니다.");
         }
     } catch(err) {
         if (err instanceof TypeError && err.message === "Failed to fetch") {
@@ -110,22 +110,23 @@ async function checkLoginId() {
     }
 
     try {
-        const res = await fetchJsonSafe(`/api/users/check-id?loginId=${encodeURIComponent(loginId)}`);
+        const res = await fetch(`/api/users/check-id?loginId=${encodeURIComponent(loginId)}`);
+        const parsed = await fetchJsonSafe(res);
 
-        if (res.raw) {
+        if (parsed.raw) {
             console.error("서버 응답이 JSON 형식이 아닙니다.");
             alert("서버 응답이 올바르지 않습니다.");
             return;
         }
 
-        if (res.ok) {
-            if (res.duplicate) {
+        if (parsed.ok) {
+            if (parsed.duplicate) {
                 setIdCheckResult("이미 사용 중인 아이디입니다.", "red", "false");
             } else {
                 setIdCheckResult("사용 가능한 아이디입니다.", "green", "true");
             }
         } else {
-            alert(res.message || "알 수 없는 오류가 발생했습니다.");
+            alert(parsed.message || "알 수 없는 오류가 발생했습니다.");
         }
 
     } catch (err) {
