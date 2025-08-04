@@ -1,6 +1,11 @@
-export async function fetchJsonSafe(url, options = {}) {
+export async function fetchJsonSafe(res) {
+
+    if (!res){
+        console.error("fetchJsonSafe에 null 응답이 전달되었습니다.");
+        return null;
+    }
+
     try {
-        const res = await fetch(url, options);
         const text = await res.text();
         let data = {};
 
