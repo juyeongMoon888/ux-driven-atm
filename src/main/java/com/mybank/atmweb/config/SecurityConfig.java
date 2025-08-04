@@ -31,7 +31,9 @@ public class SecurityConfig {
                                 "/api/users/check-id",
                                 "/api/auth/login",
                                 "/api/auth/token/refresh",
-                                "/api/auth/logout")
+                                "/api/auth/check",
+                                "/api/auth/logout",
+                                "/bank")
                         .permitAll()
                         .requestMatchers("/js/**", "/css/**", "/favicon.ico").permitAll()
                         .requestMatchers(
