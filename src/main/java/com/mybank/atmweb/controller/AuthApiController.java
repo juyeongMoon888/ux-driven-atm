@@ -141,6 +141,7 @@ public class AuthApiController {
                 )
         ));
     }
+
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
         String token = jwtUtil.extractToken(request);
@@ -175,6 +176,31 @@ public class AuthApiController {
         }
 
         return responseUtil.buildResponse(SuccessCode.LOGOUT_SUCCESS, HttpStatus.OK, null);
+    }
+
+    @GetMapping("/check")
+    public ResponseEntity<?> checkLoginStatus(HttpServletRequest request){
+        String token = jwtUtil.extractToken(request);
+        if (token != null) {
+            try {
+                //2. 토큰 유효성 검증 (만료, 위조 등 체크)
+                jwtUtil.validateToken(token);
+                return ResponseEntity.ok().build();
+            } catch (ExpiredJwtException e) {
+                //토큰 만료된 경우
+                System.out.println("ExpiredJwtException 발생");
+                throw new CustomException(ErrorCode.TOKEN_EXPIRED);
+            } catch (MalformedJwtException e) {
+                //토큰 구조가 잘못된 경우
+                System.out.println("MalformedJwtException 발생");
+                throw new CustomException(ErrorCode.TOKEN_MALFORMED);
+            } catch (JwtException e) {
+                // 그 외 위조된 경우 등
+                System.out.println("JwtException 발생");
+                throw new CustomException(ErrorCode.TOKEN_INVALID);
+            }
+        }
+        throw new CustomException(ErrorCode.TOKEN_NOT_FOUND);
     }
 
 }
