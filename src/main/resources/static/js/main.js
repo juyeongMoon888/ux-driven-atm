@@ -1,7 +1,7 @@
-import ApiError from "./errors/ApiError.js";
-import { getAccessToken, getUserFromLocalStorage, tryOnceToDetectRecovery } from "./lib/utils.js"
-import { fetchWithAuth } from "./lib/fetchWithAuth.js"
-import { fetchJsonSafe } from "./lib/fetchJsonSafe.js"
+import ApiError from "/js/errors/ApiError.js";
+import { getAccessToken, getUserFromLocalStorage, tryOnceToDetectRecovery } from "/js/lib/utils.js"
+import { fetchWithAuth } from "/js/lib/fetchWithAuth.js"
+import { fetchJsonSafe } from "/js/lib/fetchJsonSafe.js"
 
 
 document.addEventListener("DOMContentLoaded", main);
@@ -33,7 +33,6 @@ function initUI() {
     }
 }
 
-
 function bindEvents() {
     if (loginBtn) {
         loginBtn.addEventListener("click", goToLogin);
@@ -50,7 +49,7 @@ function bindEvents() {
 
     if (bankBtn) {
         console.log("bankBtn 바인딩 시도함")
-        bankBtn.addEventListener("click", checkTokenBeforeEnteringBank);
+        bankBtn.addEventListener("click", goToBank);
     } else {
         console.warn("bankBtn이 존재하지 않음 - 이벤트 바인딩 실패");
     }
@@ -81,7 +80,6 @@ function setUIToLoggedOut() {
 }
 
 async function handleLogout() {
-    console.log("handleLogout 진입");
     try {
         await fetchWithAuth("/api/auth/logout", {
            method: "POST",
@@ -93,10 +91,8 @@ async function handleLogout() {
         localStorage.removeItem("accessToken");
         localStorage.removeItem("user");
 
-        //UI 초기화: greeting 메시지, 버튼 상태 등
         resetUIToLoggedOut();
 
-        //페이지 새로고침 또는 리다이렉트
         location.reload();
     }
 }
@@ -116,58 +112,47 @@ async function fetchMyInfo() {
             console.error("fetchWithAuth 응답이 null입니다.");
             return;
         }
+        if (res?.error === ERROR_MESSAGES.TOKEN_EXPIRED) {
+          alert(ERROR_MESSAGES.TOKEN_EXPIRED);
+          location.href = "/login";
+          return;
+        }
+
         parsed = await fetchJsonSafe(res);
         const status = res.status;
 
-        //refactor: json이 안오더라도 null은 아니기 때문에 이 코드는 지워야함.
-        if (parsed === null) {
-            return;
-        }
         if (parsed.ok) {
             greetingEl.textContent=`안녕하세요,${parsed.name}님`;
             localStorage.setItem("user", JSON.stringify(parsed));
         } else {
-            if (status === 401) {
-                 throw new ApiError (parsed.code, parsed.message);
-            } else if (status === 500) {
+            switch (status) {
+                case 401:
+                resetUIToLoggedOut();
+                alert(ERROR_MESSAGES.TOKEN_EXPIRED);
+                localStorage.removeItm("accessToken");
+                location.href = "/login";
+                break;
+
+                case 500:
                 throw new Error ("서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
-            } else {
-                throw new Error(`알 수 없는 오류 (code: ${parsed.status})`);
+
+                default:
+                throw new Error(`알 수 없는 오류 (code: ${status})`);
             }
         }
     }
     catch (err) {
         resetUIToLoggedOut();
-
-        if (err instanceof ApiError) {
-            alert("세션이 만료되었습니다. 다시 로그인해주세요.");
-            setTimeout(() => {
-            window.location.href = "/login";
-            }, 5000);
-
-        } else if (err instanceof TypeError && err.message === "Failed to fetch") {
-            alert("서버가 꺼졌습니다. 복구를 기다립니다...");
-            tryOnceToDetectRecovery(); // 서버 꺼졌을 때만 감시 시작
+        if (err instanceof TypeError && err.message === "Failed to fetch") {
+            alert(ERROR_MESSAGES.NETWORK_DOWN);
+            tryOnceToDetectRecovery();
         } else {
-            alert(err.message);
+            alert(err.message || ERROR_MESSAGES.UNKNOWN);
         }
     };
 }
-async function checkTokenBeforeEnteringBank() {
-    try {
-        const res = await fetchWithAuth("/api/auth/check", {
-            method: "GET",
-            credentials: "include"
-        })
-
-        if (res.ok) {
-            location.href = "/bank";
-        } else {
-            location.href = "/login";
-        }
-    } catch (err) {
-        console.log("요청 실패", err);
-    }
+function goToBank() {
+    location.href = "/bank";
 }
 function goToLogin() {
     location.href = "/login";
