@@ -87,7 +87,6 @@ public class AuthApiController {
 
     @PostMapping("/token/refresh")
     public ResponseEntity<?> refreshToken(HttpServletRequest request, HttpServletResponse response) {
-        System.out.println("✅refreshToken 진입");
         Cookie[] cookies = request.getCookies();
         String refreshToken = authService.findRefreshTokenFromCookies(cookies);//@CookieValue로 생략될 부분
 
@@ -153,7 +152,6 @@ public class AuthApiController {
                 Long userId = jwtUtil.getUserId(token);
                 authService.logout(userId);
 
-                //쿠키 제거 //maxAge가 0인 쿠키를 응답하는건가?
                 ResponseCookie accessTokenCookie = ResponseCookie.from("accessToken", "")
                         .httpOnly(true)
                         .secure(false)
