@@ -20,10 +20,8 @@ let accessToken;
             console.warn("⚠️ accessToken이 응답에 없습니다:", parsed);
         }
         return accessToken;
-    } catch (e) {
-        console.log("alert 전에 도달");
-        alert("세션이 만료되었습니다. 다시 로그인해주세요.");
-
+    } catch (err) {
+        console.error("토큰 재발급 중 예외 발생:", err);
         return null;
     }
 }
