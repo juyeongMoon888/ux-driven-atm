@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @RequiredArgsConstructor
-@RequestMapping("/api")
+@RequestMapping("/api/bank")
 @RestController
 public class AccountApiController {
 
@@ -24,9 +24,8 @@ public class AccountApiController {
     private final JwtUtil jwtUtil;
     private final ResponseUtil responseUtil;
 
-    @PostMapping("/accounts")
+    @PostMapping("/open-account")
     public ResponseEntity<?> createAccount(@RequestBody AccountRequestDto dto, HttpServletRequest request) {
-        log.info("✅ 컨트롤러 진입: {}", dto);
         String token = jwtUtil.extractToken(request);
         Long userId = jwtUtil.getUserId(token);
 
