@@ -1,5 +1,5 @@
-import { fetchWithAuth } from "./lib/fetchWithAuth.js"
-import { fetchJsonSafe } from "./lib/fetchJsonSafe.js"
+import { fetchWithAuth } from "/js/lib/fetchWithAuth.js"
+import { fetchJsonSafe } from "/js/lib/fetchJsonSafe.js"
 
 document.addEventListener("DOMContentLoaded", main);
 let accountCreateBtn, bankPage;
@@ -16,6 +16,18 @@ function initElement() {
     console.log("✅ accountCreateBtn:", accountCreateBtn);
 }
 
+function bindEvents() {
+    if (accountCreateBtn) {
+        console.log("✅ 이벤트 바인딩 시작됨");
+        accountCreateBtn.addEventListener("click", handleAccountCreate);
+    } else {
+        console.warn("❗ accountCreateBtn이 DOM에 없음");
+        console.log("accountCreateBtn이 생성되지 않았습니다.")
+    }
+}
+async function handleAccountCreate() {
+    location.href = "/bank/open-account";
+}
 async function checkTokenBeforeEnteringBank() {
     try {
         const res = await fetchWithAuth("/api/auth/check", {
@@ -36,18 +48,3 @@ async function checkTokenBeforeEnteringBank() {
         return false;
     }
 }
-function bindEvents() {
-    if (accountCreateBtn) {
-        console.log("✅ 이벤트 바인딩 시작됨");
-        accountCreateBtn.addEventListener("click", handleAccountCreate);
-    } else {
-        console.warn("❗ accountCreateBtn이 DOM에 없음");
-        console.log("accountCreateBtn이 생성되지 않았습니다.")
-    }
-}
-async function handleAccountCreate() {
-    console.log("계좌개설 버튼 클릭됨");
-    location.href = "/accounts";
-}
-
-//git message - feat: bank.js에 비로그인 접근 방어 및 토큰 유효성 확인 로직 추가
