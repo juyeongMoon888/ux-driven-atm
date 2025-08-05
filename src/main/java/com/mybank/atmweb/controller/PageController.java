@@ -13,29 +13,30 @@ public class PageController {
 
     private final UserService userService;
 
-    //첫 메인 페이지
     @GetMapping("/")
     public String mainPage() {
-        return "main"; //인증 성공 후 보여줄 메인 페이지
+        return "main";
     }
 
-    //로그인
     @GetMapping("/login")
     public String loginForm() {
-        return "login"; //커스텀 로그인 페이지
+        return "login";
     }
 
-    //회원가입 폼
     @GetMapping("/signup")
     public String signupForm() {
         return "signup";
     }
 
-    //계좌 개설
-    @GetMapping("/accounts")
-    public String accountsForm(Model model) {
+    @GetMapping("/bank")
+    public String bankPage() {
+        return "bank";
+    }
+
+    @GetMapping("/bank/open-account")
+    public String openAccountForm(Model model) {
         model.addAttribute("bankTypes", BankType.values());
-        return "accounts";
+        return "bank/open-account";
     }
 
     //입출금
