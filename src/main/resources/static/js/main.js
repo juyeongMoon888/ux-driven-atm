@@ -1,8 +1,13 @@
 import ApiError from "/js/errors/ApiError.js";
-import { getAccessToken, getUserFromLocalStorage, tryOnceToDetectRecovery } from "/js/lib/utils.js"
-import { fetchWithAuth } from "/js/lib/fetchWithAuth.js"
-import { fetchJsonSafe } from "/js/lib/fetchJsonSafe.js"
-
+import { fetchWithAuth } from "/js/lib/fetchWithAuth.js";
+import { fetchJsonSafe } from "/js/lib/fetchJsonSafe.js";
+import { ErrorCode } from "/js/lib/constants/errorMessages.js";
+import { getAccessToken } from "/js/lib/storage/getAccessToken.js";
+import { getUserFromLocalStorage } from "/js/lib/storage/getUserFromLocalStorage.js";
+import { tryOnceToDetectRecovery } from "/js/lib/network/tryOnceToDetectRecovery.js";
+import { handleNetworkOrApiError } from "/js/lib/network/handleNetworkOrApiError.js";
+import { showFieldErrors } from "/js/lib/validation/renderFieldError.js";
+import { handleApiFailure } from "/js/lib/api/handleApiFailure.js";
 
 document.addEventListener("DOMContentLoaded", main);
 let loginBtn, logoutBtn, greetingEl, bankBtn;
@@ -103,60 +108,34 @@ function resetUIToLoggedOut() {
 }
 
 async function fetchMyInfo() {
-    console.log("fetchMyInfo 진입")
-        let res;
-        let parsed;
+    let res, parsed;
     try {
         res = await fetchWithAuth("/api/users/me");
-        if (!res) {
-            console.error("fetchWithAuth 응답이 null입니다.");
-            return;
-        }
-        if (res?.error === ERROR_MESSAGES.TOKEN_EXPIRED) {
-          alert(ERROR_MESSAGES.TOKEN_EXPIRED);
-          location.href = "/login";
-          return;
-        }
 
         parsed = await fetchJsonSafe(res);
-        const status = res.status;
-
-        if (parsed.ok) {
-            greetingEl.textContent=`안녕하세요,${parsed.name}님`;
-            localStorage.setItem("user", JSON.stringify(parsed));
+        if (res.ok) {
+            handleSuccess(parsed, (data) = > {
+                greetingEl.textContent=`안녕하세요,${data.name}님`;
+                localStorage.setItem("user", JSON.stringify(data));
+            });
         } else {
-            switch (status) {
-                case 401:
-                resetUIToLoggedOut();
-                alert(ERROR_MESSAGES.TOKEN_EXPIRED);
-                localStorage.removeItm("accessToken");
-                location.href = "/login";
-                break;
-
-                case 500:
-                throw new Error ("서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
-
-                default:
-                throw new Error(`알 수 없는 오류 (code: ${status})`);
-            }
+            handleApiFailure(res, parsed);
         }
     }
     catch (err) {
         resetUIToLoggedOut();
-        if (err instanceof TypeError && err.message === "Failed to fetch") {
-            alert(ERROR_MESSAGES.NETWORK_DOWN);
-            tryOnceToDetectRecovery();
-        } else {
-            alert(err.message || ERROR_MESSAGES.UNKNOWN);
-        }
+        handleNetworkOrApiError)();
     };
 }
 function goToBank() {
     location.href = "/bank";
 }
+
 function goToLogin() {
     location.href = "/login";
 }
+
+
 
 
 
