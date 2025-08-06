@@ -114,10 +114,8 @@ async function fetchMyInfo() {
 
         parsed = await fetchJsonSafe(res);
         if (res.ok) {
-            handleSuccess(parsed, (data) = > {
-                greetingEl.textContent=`안녕하세요,${data.name}님`;
-                localStorage.setItem("user", JSON.stringify(data));
-            });
+            greetingEl.textContent=`안녕하세요,${data.name}님`;
+            localStorage.setItem("user", JSON.stringify(data));
         } else {
             handleApiFailure(res, parsed);
         }
