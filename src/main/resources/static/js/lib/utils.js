@@ -1,14 +1,10 @@
-import { ERROR_MESSAGES } from "./constants/errorMessages.js";
+import { ErrorCode } from "/js/lib/constants/errorMessages.js";
 
 export function showErrorMessagesFromServer(data) {
     for (const field in data) {
         const code = data[field];
 
-        if (typeof ERROR_MESSAGES === "undefined") {
-            console.error("ERROR_MESSAGES 객체가 정의되어 있지 않습니다!");
-            return;
-        }
-        const message = ERROR_MESSAGES[code] || "입력값이 올바르지 않습니다.";
+        const message = ErrorCode[code] || "입력값이 올바르지 않습니다.";
         const errorEl = document.getElementById(`${field}-error`);
 
         if (errorEl) {
@@ -43,14 +39,13 @@ export function tryOnceToDetectRecovery() {
 }
 
 export async function handleErrorResponse(res) {
-
     const code = res.code || "UNKNOWN";
     const message = res.message || "알 수 없는 오류가 발생했습니다.";
 
     if (res.status === 401) {
         throw new ApiError(code, message);
     } else if (res.status === 500) {
-        throw new Error ("서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
+        throw new Error (ERROR_MESSAGES.SERVER_ERROR);
     } else {
         throw new Error (`알 수 없는 오류 (code: ${res.status}) - ${message}`);
     }
