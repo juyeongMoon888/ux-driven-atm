@@ -1,5 +1,7 @@
 import { fetchWithAuth } from "/js/lib/fetchWithAuth.js"
 import { fetchJsonSafe } from "/js/lib/fetchJsonSafe.js"
+import { handleApiFailure } from "/js/lib/api/handleApiFailure.js"
+import { handleNetworkOrApiError } from "/js/lib/network/handleNetworkOrApiError.js"
 
 document.addEventListener("DOMContentLoaded", main);
 let accountCreateBtn, bankPage;
