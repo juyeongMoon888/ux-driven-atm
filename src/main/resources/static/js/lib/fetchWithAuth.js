@@ -1,5 +1,5 @@
-import { tryRefreshToken } from "./tryRefreshToken.js";
-import { handleErrorResponse } from "./utils.js";
+import { tryRefreshToken } from "/js/lib/tryRefreshToken.js";
+import { ErrorCode } from "/js/lib/constants/errorMessages.js";
 
 export async function fetchWithAuth(url, options = {}) {
     let token = localStorage.getItem("accessToken");
@@ -28,15 +28,8 @@ export async function fetchWithAuth(url, options = {}) {
                 credentials: "include"
             });
         } else {
-            localStorage.removeItem("accessToken");
-            setTimeout(() => {
-            window.location.href = "/login";
-            }, 5000);
+            return { error: ErrorCode.TOKEN_EXPIRED};
         }
-    }
-
-    if (!res.ok) {
-        await handleErrorResponse(res);
     }
     return res;
 }
