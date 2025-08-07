@@ -1,5 +1,7 @@
 import { fetchWithAuth } from "/js/lib/fetchWithAuth.js"
 import { fetchJsonSafe } from "/js/lib/fetchJsonSafe.js"
+import { handleApiFailure } from "/js/lib/api/handleApiFailure.js"
+import { handleNetworkOrApiError } from "/js/lib/network/handleNetworkOrApiError.js"
 
 document.addEventListener("DOMContentLoaded", main);
 let accountForm, bankSelect, passwordInput, accountNameInput;
@@ -19,7 +21,6 @@ function bindEvents() {
 }
 async function handleSubmitAccount(e) {
     e.preventDefault();
-    console.log("✅ JS로 요청 시도 중");
 
     const account = {
         bank: bankSelect.value,
@@ -37,20 +38,16 @@ async function handleSubmitAccount(e) {
             },
             body: JSON.stringify(account)
         });
-
         parsed = await fetchJsonSafe(res);
 
-        if (!parsed.ok) {
-            if (parsed.code == "BANK_INVALID") {
-                const errors = {bankSelect: "BANK_INVALID"}
-                showFieldErrors(errors, [bankSelect]);
-            }
-        } else {
-            alert(parsed.message || "계좌생성이 완료되었습니다.")
+        if (res.ok) {
+            alert(parsed.message);
             location.href = "/bank";
+        } else {
+            handleApiFailure(res, parsed);
         }
 
     } catch (err) {
-        console.error("요청 실패", err);
+        handleNetworkOrApiError(err);
     }
 }
