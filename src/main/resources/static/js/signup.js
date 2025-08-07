@@ -1,11 +1,12 @@
-import { showErrorMessagesFromServer, tryOnceToDetectRecovery } from "./lib/utils.js";
-import { validateUser } from "./lib/validation/validateUser.js";
-import { showFieldErrors } from "./lib/validation/renderFieldError.js";
-import { fetchJsonSafe } from "./lib/fetchJsonSafe.js";
-
-let signupForm, loginIdInput, passwordInput, emailInput, emailError, nameInput, residentNumberInput, genderInput, phoneNumberInput, idCheckResult, checkLoginIdBtn;
+import { showErrorMessagesFromServer, tryOnceToDetectRecovery } from "/js/lib/utils.js";
+import { validateUser } from "/js/lib/validation/validateUser.js";
+import { showFieldErrors } from "/js/lib/validation/renderFieldError.js";
+import { fetchJsonSafe } from "/js/lib/fetchJsonSafe.js";
+import { handleApiFailure } from "/js/lib/api/handleApiFailure.js"
+import { handleNetworkOrApiError } from "/js/lib/network/handleNetworkOrApiError.js"
 
 document.addEventListener("DOMContentLoaded", main);
+let signupForm, loginIdInput, passwordInput, emailInput, emailError, nameInput, residentNumberInput, genderInput, phoneNumberInput, idCheckResult, checkLoginIdBtn;
 
 function main() {
     initElements();
@@ -49,12 +50,10 @@ async function handleSubmitSignup(e) {
         phoneNumber: phoneNumberInput.value
     };
 
-    const start = performance.now();
     const errors = validateUser(user);
 
     if (errors) {
-        showFieldErrors(errors, ["loginId", "password", "email", "name", "residentNumber", "gender", "phoneNumber" ]);
-        const end = performance.now();
+        showFieldErrors(errors, ["loginId", "password", "email", "name", "residentNumber", "gender", "phoneNumber"]);
         return;
     }
 
@@ -68,35 +67,13 @@ async function handleSubmitSignup(e) {
         });
         const parsed = await fetchJsonSafe(res);
 
-        if (parsed.raw) {
-            console.error("서버 응답이 JSON 형식이 아닙니다.");
-            alert("서버 응답이 올바르지 않습니다.");
-            return;
-        }
-
-        if (parsed.ok){
-            if (parsed.code === "SIGNUP_SUCCESS") {
-                alert(parsed.message || "회원가입 성공");
-                location.href="/login";
-            } else {
-                 alert(parsed.message || "회원가입 실패");
-            }
-        }
-        else if (parsed.code ===  "DATA_INTEGRITY_VIOLATION") {
-            alert(res.message);
-        }
-        else if (parsed.code === "VALIDATION_FAILED"){
-            showErrorMessagesFromServer(parsed.data);
+        if (res.ok) {
+            alert(parsed.message);
         } else {
-              alert(parsed.message || "알 수 없는 오류가 발생했습니다.");
+            handleApiFailure(res, parsed);
         }
     } catch(err) {
-        if (err instanceof TypeError && err.message === "Failed to fetch") {
-            alert("서버와 연결할 수 없습니다. 인터넷 연결을 확인해주세요.");
-            tryOnceToDetectRecovery();
-        } else {
-            alert("예상치 못한 오류가 발생했습니다.");
-        }
+        handleNetworkOrApiError(err);
     }
 }
 
