@@ -1,7 +1,7 @@
 import { ApiError } from "/js/errors/ApiError.js";
 import { fetchJsonSafe } from "/js/lib/fetchJsonSafe.js";
 import { ErrorCode } from "/js/lib/constants/errorMessages.js";
-import { handleApiFailure } "/js/lib/api/handleApiFailure.js";
+import { handleApiFailure } from "/js/lib/api/handleApiFailure.js";
 import { handleNetworkOrApiError } from "/js/lib/network/handleNetworkOrApiError.js";
 
 document.addEventListener("DOMContentLoaded", main);
@@ -48,7 +48,7 @@ async function handleLoginSubmit(e) {
             userInfo = parsed.user;
             alert("로그인 성공!");
         } else {
-            handleApiFailure(res,parsed);
+            handleApiFailure(res, parsed);
         }
         localStorage.setItem("accessToken", accessToken);
         localStorage.setItem("user", JSON.stringify(userInfo));
