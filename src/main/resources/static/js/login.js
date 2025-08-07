@@ -1,8 +1,8 @@
-import ApiError from "/js/errors/ApiError.js";
+import { ApiError } from "/js/errors/ApiError.js";
 import { showErrorMessagesFromServer, tryOnceToDetectRecovery } from "/js/lib/utils.js";
 import { fetchJsonSafe } from "/js/lib/fetchJsonSafe.js";
 import { ErrorCode } from "/js/lib/constants/errorMessages.js";
-import { handleNetworkOrApiError } form "/js/lib/network/handleNetworkOrApiError.js";
+import { handleNetworkOrApiError } from "/js/lib/network/handleNetworkOrApiError.js";
 
 document.addEventListener("DOMContentLoaded", main);
 let loginForm, loginIdInput, passwordInput;
