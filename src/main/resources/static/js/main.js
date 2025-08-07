@@ -1,4 +1,4 @@
-import ApiError from "/js/errors/ApiError.js";
+import { ApiError } from "/js/errors/ApiError.js";
 import { fetchWithAuth } from "/js/lib/fetchWithAuth.js";
 import { fetchJsonSafe } from "/js/lib/fetchJsonSafe.js";
 import { ErrorCode } from "/js/lib/constants/errorMessages.js";
@@ -28,13 +28,13 @@ function initElement() {
 
 function initUI() {
     const accessToken = getAccessToken();
-    const cachedUser = getUserFromLocalStorage();
+    const user = getUserFromLocalStorage();
 
-    if (!accessToken) return;
-
-    if (cachedUser) {
+    if (accessToken && user) {
         setUIToLoggedIn();
-        greetingEl.textContent=`안녕하세요,${cachedUser.name}님`;
+        greetingEl.textContent=`안녕하세요,${user.name}님`;
+    } else {
+        setUIToLoggedOut();
     }
 }
 
@@ -62,10 +62,10 @@ function bindEvents() {
 
 async function maybeFetchUserInfo() {
     console.log("maybeFetchUserInfo 진입")
-    try {
+
+    const token = localStorage.getItem("accessToken");
+    if (token) {
         await fetchMyInfo();
-    } catch (err) {
-        console.log("유저 정보 확인 실패", err);
     }
 }
 
@@ -76,6 +76,7 @@ function setUIToLoggedIn() {
 }
 
 function setUIToLoggedOut() {
+console.log("✅ setUIToLoggedOut 실행됨");
     loginBtn.style.display = "block";
     logoutBtn.style.display = "none";
     if (greetingEl) {
@@ -86,7 +87,7 @@ function setUIToLoggedOut() {
 
 async function handleLogout() {
     try {
-        await fetchWithAuth("/api/auth/logout", {
+        await fetch("/api/auth/logout", {
            method: "POST",
            credentials: "include"
         });
@@ -108,21 +109,22 @@ function resetUIToLoggedOut() {
 }
 
 async function fetchMyInfo() {
+    console.log("fetchMyInfo 진입")
+
     let res, parsed;
     try {
         res = await fetchWithAuth("/api/users/me");
-
         parsed = await fetchJsonSafe(res);
         if (res.ok) {
-            greetingEl.textContent=`안녕하세요,${data.name}님`;
-            localStorage.setItem("user", JSON.stringify(data));
+            greetingEl.textContent=`안녕하세요,${parsed.name}님`;
+            localStorage.setItem("user", JSON.stringify(parsed));
         } else {
             handleApiFailure(res, parsed);
         }
     }
     catch (err) {
         resetUIToLoggedOut();
-        handleNetworkOrApiError)();
+        handleNetworkOrApiError(err);
     };
 }
 function goToBank() {
