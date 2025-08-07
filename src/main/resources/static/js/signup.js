@@ -1,4 +1,3 @@
-import { showErrorMessagesFromServer, tryOnceToDetectRecovery } from "/js/lib/utils.js";
 import { validateUser } from "/js/lib/validation/validateUser.js";
 import { showFieldErrors } from "/js/lib/validation/renderFieldError.js";
 import { fetchJsonSafe } from "/js/lib/fetchJsonSafe.js";
@@ -90,27 +89,21 @@ async function checkLoginId() {
         const res = await fetch(`/api/users/check-id?loginId=${encodeURIComponent(loginId)}`);
         const parsed = await fetchJsonSafe(res);
 
-        if (parsed.raw) {
-            console.error("서버 응답이 JSON 형식이 아닙니다.");
-            alert("서버 응답이 올바르지 않습니다.");
-            return;
-        }
-
-        if (parsed.ok) {
+        if (res.ok) {
             if (parsed.duplicate) {
                 setIdCheckResult("이미 사용 중인 아이디입니다.", "red", "false");
             } else {
                 setIdCheckResult("사용 가능한 아이디입니다.", "green", "true");
             }
         } else {
-            alert(parsed.message || "알 수 없는 오류가 발생했습니다.");
+            handleApiFailure(res, parsed);
         }
-
     } catch (err) {
-        setIdCheckResult("서버 오류가 발생했습니다.", "red", "false");
+        handleNetworkOrApiError(err);
     }
 }
 
+//showFieldError랑 통합할 수 있을까?
 function setIdCheckResult(message, color, valid) {
     idCheckResult.innerText =  message;
     idCheckResult.style.color = color;
