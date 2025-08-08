@@ -76,7 +76,6 @@ function setUIToLoggedIn() {
 }
 
 function setUIToLoggedOut() {
-console.log("✅ setUIToLoggedOut 실행됨");
     loginBtn.style.display = "block";
     logoutBtn.style.display = "none";
     if (greetingEl) {
