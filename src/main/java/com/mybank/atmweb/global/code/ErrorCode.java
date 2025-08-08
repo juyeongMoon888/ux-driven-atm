@@ -18,6 +18,7 @@ public enum ErrorCode implements BaseCode{
     TOKEN_BLACKLISTED("error.token_blacklisted", HttpStatus.UNAUTHORIZED),
     TOKEN_LOGGED_OUT("error.token_logged_out", HttpStatus.UNAUTHORIZED),
     BANK_INVALID("error.bank_invalid", HttpStatus.BAD_REQUEST),
+    TOKEN_NOT_FOUND("error.token_not_found", HttpStatus.UNAUTHORIZED)
     ;
 
     private final String messageKey;
