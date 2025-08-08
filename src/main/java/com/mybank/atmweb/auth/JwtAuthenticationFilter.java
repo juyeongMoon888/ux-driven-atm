@@ -59,16 +59,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 "/api/auth/login",
                 "/api/auth/token/refresh",
                 "/api/auth/logout",
+                "/api/auth/check",
+                "/bank",
+                "/bank/open-account",
+                "/bank/accounts",
                 "/actuator/**"
         );
         if (whitelist.contains(path) ||
-                path.equals("/error/") ||
                 path.startsWith("/js/") ||
+                path.equals("/error/") ||
                 path.startsWith("/css/") ||
                 path.startsWith("/images/") ||
                 path.startsWith("/favicon.ico") ||
                 path.startsWith("/actuator/")
+
         ) {
+            System.out.println("✅ JS 요청이므로 필터 통과");
             filterChain.doFilter(request, response);
             return;
         }
