@@ -4,20 +4,18 @@ import com.mybank.atmweb.domain.Account;
 import com.mybank.atmweb.domain.BankType;
 import com.mybank.atmweb.domain.User;
 import com.mybank.atmweb.dto.AccountRequestDto;
+import com.mybank.atmweb.dto.AccountSummaryDto;
 import com.mybank.atmweb.global.code.ErrorCode;
 import com.mybank.atmweb.global.exception.user.CustomException;
 import com.mybank.atmweb.repository.AccountRepository;
 import com.mybank.atmweb.repository.UserRepository;
-import jakarta.servlet.http.Cookie;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-import java.util.Date;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.mybank.atmweb.global.code.ErrorCode.BANK_INVALID;
 @Slf4j
@@ -55,7 +53,7 @@ public class AccountService {
         Account saved = accountRepository.save(account);
         log.info("✅ 저장된 계좌 ID: {}", saved.getId());
     }
-    //로직 UUID로 만든거 수정함. (너무 단순해서)
+
     public String generateAccountNumber(String prefix) {
         String randomDigits = String.format("%08d", new Random().nextInt(100_100_100));
         return prefix + randomDigits;
@@ -66,5 +64,15 @@ public class AccountService {
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
     }
 
+    public List<AccountSummaryDto> getAccountSummariesByUserId(Long userId) {
+        Set<Account> accounts = accountRepository.findByOwner_Id(userId);
 
+        return accounts.stream()
+                .map(acc -> new AccountSummaryDto(
+                        acc.getBank(),
+                        acc.getAccountNumber(),
+                        acc.getBalance()
+                ))
+                .collect(Collectors.toList());
+    }
 }
