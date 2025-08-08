@@ -31,15 +31,17 @@ public class SecurityConfig {
                                 "/api/users/check-id",
                                 "/api/auth/login",
                                 "/api/auth/token/refresh",
-                                "/api/auth/check",
                                 "/api/auth/logout",
-                                "/bank")
+                                "/api/auth/check",
+                                "/bank",
+                                "/bank/open-account",
+                                "/bank/accounts")
                         .permitAll()
                         .requestMatchers("/js/**", "/css/**", "/favicon.ico").permitAll()
                         .requestMatchers(
                                 "/api/users/me",
-                                "/accounts",
-                                "/api/accounts"
+                                "/api/bank/open-account",
+                                "/api/bank/account-list"
                         ).authenticated()
                         .anyRequest().denyAll()
                 )
