@@ -38,4 +38,16 @@ public class Account {
     @Enumerated(EnumType.STRING)
     @Column(name="bank")
     private BankType bank;
+
+    public void deposit(Long amount) {
+        this.balance += amount;
+    }
+
+    public void withdraw(Long amount) {
+        if (balance < amount) {
+            throw new IllegalArgumentException();
+        }
+        this.balance -= amount;
+    }
 }
+
