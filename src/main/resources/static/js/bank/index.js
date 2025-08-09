@@ -1,4 +1,3 @@
-
 import { fetchWithAuth } from "/js/lib/fetchWithAuth.js"
 import { fetchJsonSafe } from "/js/lib/fetchJsonSafe.js"
 import { handleApiFailure } from "/js/lib/api/handleApiFailure.js"
@@ -33,7 +32,6 @@ function bindEvents() {
     }
 }
 
-
 async function handleAccountCreate() {
     location.href = "/bank/open-account";
 }
@@ -56,6 +54,5 @@ async function checkTokenBeforeEnteringBank() {
     }
 }
 async function handleAccountList() {
-    console.log("handleAccountList 진입");
     location.href = "/bank/accounts";
 }
