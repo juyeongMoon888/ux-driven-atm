@@ -2,13 +2,16 @@ package com.mybank.atmweb.service;
 
 import com.mybank.atmweb.domain.Account;
 import com.mybank.atmweb.domain.BankType;
+import com.mybank.atmweb.domain.TransferType;
 import com.mybank.atmweb.domain.User;
 import com.mybank.atmweb.dto.AccountRequestDto;
 import com.mybank.atmweb.dto.AccountSummaryDto;
+import com.mybank.atmweb.dto.TransferDto;
 import com.mybank.atmweb.global.code.ErrorCode;
 import com.mybank.atmweb.global.exception.user.CustomException;
 import com.mybank.atmweb.repository.AccountRepository;
 import com.mybank.atmweb.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -74,5 +77,25 @@ public class AccountService {
                         acc.getBalance()
                 ))
                 .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void updateBalance(TransferDto dto, Long userId) {
+        TransferType type = dto.getType();
+        String accountNumber = dto.getAccountNumber();
+        Long amount = dto.getAmount();
+
+        Account account = findAccountByAccountNumberAndUserId(accountNumber, userId);
+
+        if (type == TransferType.DEPOSIT) {
+            account.deposit(amount);
+        } else if (type == TransferType.WITHDRAW) {
+            account.withdraw(amount);
+        }
+    }
+
+    public Account findAccountByAccountNumberAndUserId(String accountNumber, Long userId) {
+        return accountRepository.findByAccountNumberAndOwner_Id(accountNumber, userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.ACCOUNT_NOT_FOUND_FOR_USER));
     }
 }
