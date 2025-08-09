@@ -61,8 +61,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 "/api/auth/logout",
                 "/api/auth/check",
                 "/bank",
-                "/bank/open-account",
-                "/bank/accounts",
+                "/bank/**",
                 "/actuator/**"
         );
         if (whitelist.contains(path) ||
@@ -122,12 +121,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
 
                 UserDetails userDetails = userDetailsService.loadUserByUsername(loginId);
-                System.out.println("userDetails = " + userDetails);
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-                System.out.println("authentication = " + authentication);
                 jwtUtil.validateToken(token);
                 token = jwtUtil.extractToken(request);
-                request.setAttribute("accessTokenPresent", token != null); //여기까지 찍음
+                request.setAttribute("accessTokenPresent", token != null);
                 SecurityContextHolder.getContext().setAuthentication(authentication);
 
             } catch (ExpiredJwtException e) {
@@ -143,6 +140,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
             catch (Exception e) {
                 log.warn("🔴 [기타 JWT 오류] {}", e.getMessage());
+                responseUtil.writeHttpErrorResponse(response, ErrorCode.TOKEN_INVALID);
+                return;
             }
         }
         filterChain.doFilter(request, response);
