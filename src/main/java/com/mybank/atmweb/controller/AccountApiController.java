@@ -3,6 +3,7 @@ package com.mybank.atmweb.controller;
 import com.mybank.atmweb.auth.JwtUtil;
 import com.mybank.atmweb.dto.AccountRequestDto;
 import com.mybank.atmweb.dto.AccountSummaryDto;
+import com.mybank.atmweb.dto.TransferDto;
 import com.mybank.atmweb.global.ResponseUtil;
 import com.mybank.atmweb.global.code.ErrorCode;
 import com.mybank.atmweb.global.code.SuccessCode;
@@ -52,4 +53,17 @@ public class AccountApiController {
         }
     }
 
+    @PostMapping("/transfer")
+    public ResponseEntity<?> transfer(@RequestBody TransferDto dto, HttpServletRequest request) {
+        try {
+            String token = jwtUtil.extractToken(request);
+            Long userId = jwtUtil.getUserId(token);
+
+            accountService.updateBalance(dto, userId);
+
+            return responseUtil.buildResponse(SuccessCode.UPDATE_SUCCESS, HttpStatus.OK, null);
+        } catch (JwtException | IllegalArgumentException e) {
+            throw new CustomException(ErrorCode.TOKEN_INVALID);
+        }
+    }
 }
