@@ -7,7 +7,8 @@ public enum SuccessCode implements BaseCode{
     ACCESS_TOKEN_REISSUED("success.access_token_reissued", HttpStatus.OK),
     LOGOUT_SUCCESS("success.logout", HttpStatus.OK),
     ACCOUNT_CREATED("success.account_created", HttpStatus.OK),
-    READ_SUCCESS("success.account_list", HttpStatus.OK)
+    READ_SUCCESS("success.account_list", HttpStatus.OK),
+    UPDATE_SUCCESS("success.account_update", HttpStatus.OK)
     ;
 
     private final String messageKey;
