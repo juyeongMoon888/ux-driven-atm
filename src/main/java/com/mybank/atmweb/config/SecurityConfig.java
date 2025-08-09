@@ -35,18 +35,18 @@ public class SecurityConfig {
                                 "/api/auth/check",
                                 "/bank",
                                 "/bank/open-account",
-                                "/bank/accounts")
+                                "/bank/accounts",
+                                "/bank/transfer")
                         .permitAll()
                         .requestMatchers("/js/**", "/css/**", "/favicon.ico").permitAll()
                         .requestMatchers(
                                 "/api/users/me",
-                                "/api/bank/open-account",
-                                "/api/bank/account-list"
+                                "/api/bank/**"
                         ).authenticated()
                         .anyRequest().denyAll()
                 )
                 .formLogin(login -> login
-                        .loginPage("/login")//로그인 안 되어 있으면 리디렉션
+                        .loginPage("/login")
                         .permitAll()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
