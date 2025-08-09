@@ -3,7 +3,6 @@ import { fetchJsonSafe } from "/js/lib/fetchJsonSafe.js";
 import { handleNetworkOrApiError } from "/js/lib/network/handleNetworkOrApiError.js";
 import { handleApiFailure } from "/js/lib/api/handleApiFailure.js";
 
-
 document.addEventListener("DOMContentLoaded", main);
 let myAccountList, bankType, accountNumber, balance;
 function main() {
@@ -22,7 +21,6 @@ function bindEvents() {
     bindDynamicButtonEvents();
 }
 async function myAccount() {
-    console.log("myAccount 진입");
     let res, parsed;
 
     try {
@@ -63,7 +61,6 @@ function bindDynamicButtonEvents() {
     document.addEventListener("click", (e) => {
         if (e.target.classList.contains("transferBtn")) {
             const accountNumber = e.target.dataset.account;
-            console.log("선택된 계좌번호:", accountNumber);
 
             location.href = `/bank/transfer?accountNumber=${accountNumber}`;
         }
