@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
@@ -54,5 +55,11 @@ public class PageController {
     public String accountHistoryList(@RequestParam String accountNumber, Model model) {
         model.addAttribute("accountNumber", accountNumber);
         return "bank/account-history";
+    }
+
+    @GetMapping("/bank/account-history/{transactionId}")
+    public String getHistoryDetail(@PathVariable Long transactionId, Model model) {
+        model.addAttribute("transactionId", transactionId);
+        return "bank/account-history-detail";
     }
 }
