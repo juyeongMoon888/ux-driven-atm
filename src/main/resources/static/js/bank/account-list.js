@@ -31,6 +31,7 @@ async function myAccount() {
         parsed = await fetchJsonSafe(res);
 
         const accounts = parsed.data;
+                console.log("accounts=", accounts);
         if (res.ok) {
             if (Array.isArray(accounts)) {
                 for (const account of accounts) {
@@ -38,7 +39,7 @@ async function myAccount() {
                     accountDiv.innerHTML = `
                         <p>은행명: ${account.bankType}</p>
                         <p>계좌번호: ${account.accountNumber}</p>
-                        <p>잔고: ${account.balance}</p>
+                        <p>잔고: ${formatKRW(account.balance)}원</p>
                         <button class = "btn btn-primary transferBtn" data-account="${account.accountNumber}">입출금</button>
                         <button class = "btn btn-primary historyBtn" data-account="${account.accountNumber}">거래내역 보기</button>
                         <hr/>
@@ -61,8 +62,17 @@ function bindDynamicButtonEvents() {
     document.addEventListener("click", (e) => {
         if (e.target.classList.contains("transferBtn")) {
             const accountNumber = e.target.dataset.account;
-
             location.href = `/bank/transfer?accountNumber=${accountNumber}`;
+        } else if (e.target.classList.contains("historyBtn")) {
+            const accountNumber = e.target.dataset.account;
+            location.href = `/bank/account-history?accountNumber=${accountNumber}`;
         }
     });
+}
+
+function formatKRW(value) {
+  if (value == null) return "-";
+  const n = typeof value === "string" ? Number(value) : value;
+  if (!Number.isFinite(n)) return "-";
+  return n.toLocaleString("ko-KR");
 }
