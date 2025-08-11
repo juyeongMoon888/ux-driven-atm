@@ -1,15 +1,14 @@
 package com.mybank.atmweb.service;
 
-import com.mybank.atmweb.domain.Account;
-import com.mybank.atmweb.domain.BankType;
-import com.mybank.atmweb.domain.TransferType;
-import com.mybank.atmweb.domain.User;
+import com.mybank.atmweb.domain.*;
 import com.mybank.atmweb.dto.AccountRequestDto;
 import com.mybank.atmweb.dto.AccountSummaryDto;
+import com.mybank.atmweb.dto.TransactionSummaryDto;
 import com.mybank.atmweb.dto.TransferDto;
 import com.mybank.atmweb.global.code.ErrorCode;
 import com.mybank.atmweb.global.exception.user.CustomException;
 import com.mybank.atmweb.repository.AccountRepository;
+import com.mybank.atmweb.repository.TransactionRepository;
 import com.mybank.atmweb.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -17,10 +16,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.mybank.atmweb.global.code.ErrorCode.BANK_INVALID;
+
 @Slf4j
 @RequiredArgsConstructor
 @Service
@@ -29,6 +30,7 @@ public class AccountService {
     private final PasswordEncoder passwordEncoder;
     private final AccountRepository accountRepository;
     private final UserRepository userRepository;
+    private final TransactionRepository transactionRepository;
 
     public void createAccount(Long userId, AccountRequestDto dto) {
         BankType bankType;
@@ -84,18 +86,48 @@ public class AccountService {
         TransferType type = dto.getType();
         String accountNumber = dto.getAccountNumber();
         Long amount = dto.getAmount();
+        String memo = dto.getMemo();
 
         Account account = findAccountByAccountNumberAndUserId(accountNumber, userId);
 
+        long before = account.getBalance();
         if (type == TransferType.DEPOSIT) {
             account.deposit(amount);
         } else if (type == TransferType.WITHDRAW) {
             account.withdraw(amount);
         }
+        long after = account.getBalance();
+
+        recordTransaction(account, before, after, dto);
     }
 
     public Account findAccountByAccountNumberAndUserId(String accountNumber, Long userId) {
         return accountRepository.findByAccountNumberAndOwner_Id(accountNumber, userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.ACCOUNT_NOT_FOUND_FOR_USER));
     }
+
+    private void recordTransaction(Account account,
+                                   Long balanceBefore,
+                                   Long balanceAfter,
+                                   TransferDto dto) {
+        Transaction tx = new Transaction(account, dto.getType(), dto.getAmount(), balanceBefore, balanceAfter, dto.getMemo());
+
+        transactionRepository.save(tx);
+    }
+
+    public List<TransactionSummaryDto> getTransactionByAccountId(String accountNumber, Long userId) {
+        Set<Transaction> transactions = transactionRepository.findByAccount_AccountNumberAndAccount_Owner_IdOrderByCreatedAtDesc(accountNumber, userId);
+
+        return transactions.stream()
+                .map(tx -> new TransactionSummaryDto(
+                        tx.getId(),
+                        tx.getCreatedAt(),
+                        tx.getTransfer(),
+                        tx.getAmount()
+                ))
+                .collect(Collectors.toList());
+    }
+
+
+
 }
