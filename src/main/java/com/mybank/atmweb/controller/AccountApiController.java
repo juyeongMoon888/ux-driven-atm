@@ -1,10 +1,7 @@
 package com.mybank.atmweb.controller;
 
 import com.mybank.atmweb.auth.JwtUtil;
-import com.mybank.atmweb.dto.AccountRequestDto;
-import com.mybank.atmweb.dto.AccountSummaryDto;
-import com.mybank.atmweb.dto.TransactionSummaryDto;
-import com.mybank.atmweb.dto.TransferDto;
+import com.mybank.atmweb.dto.*;
 import com.mybank.atmweb.global.ResponseUtil;
 import com.mybank.atmweb.global.code.ErrorCode;
 import com.mybank.atmweb.global.code.SuccessCode;
@@ -77,6 +74,20 @@ public class AccountApiController {
             List<TransactionSummaryDto> transactionList = accountService.getTransactionByAccountId(accountNumber, userId);
 
             return responseUtil.buildResponse(SuccessCode.READ_SUCCESS, HttpStatus.OK, transactionList);
+        } catch (JwtException | IllegalArgumentException e) {
+            throw new CustomException(ErrorCode.TOKEN_INVALID);
+        }
+    }
+
+    @GetMapping("/account-history/{transactionId}")
+    public ResponseEntity<?> getHistoryDetailApi(@PathVariable Long transactionId, HttpServletRequest request) {
+        try {
+            String token = jwtUtil.extractToken(request);
+            Long userId = jwtUtil.getUserId(token);
+
+            List<TransactionDetailSummaryDto> transactionDetail = accountService.getHistoryDetail(transactionId, userId);
+
+            return responseUtil.buildResponse(SuccessCode.READ_SUCCESS, HttpStatus.OK, transactionDetail);
         } catch (JwtException | IllegalArgumentException e) {
             throw new CustomException(ErrorCode.TOKEN_INVALID);
         }
