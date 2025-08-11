@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>bank</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<h1>거래 내역</h1>
+<div id="historyList" class="col-md-6" th:attr="data-account-number=${accountNumber}"></div>
+<script type="module" src="/js/bank/account-history.js"></script>
+</body>
+</html>
