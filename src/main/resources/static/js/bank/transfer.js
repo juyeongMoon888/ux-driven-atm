@@ -4,7 +4,7 @@ import { handleApiFailure } from "/js/lib/api/handleApiFailure.js"
 import { handleNetworkOrApiError } from "/js/lib/network/handleNetworkOrApiError.js"
 
 document.addEventListener("DOMContentLoaded", main);
-let transferForm, amountInput;
+let transferForm, amountInput, memoInput;
 
 function main() {
     initElement();
@@ -14,6 +14,7 @@ function main() {
 function initElement() {
     transferForm = document.getElementById("transferForm");
     amountInput = document.getElementById("amount");
+    memoInput = document.getElementById("memo");
 }
 
 function bindEvents() {
@@ -31,6 +32,7 @@ async function handleTransferProgress(e) {
     const type = document.querySelector('input[name="type"]:checked').value;
     const accountNumber = transferForm.dataset.accountNumber;
     const amount = amountInput.value;
+    const memo = memoInput.value;
 
     try {
         res = await fetchWithAuth("/api/bank/transfer", {
@@ -40,7 +42,7 @@ async function handleTransferProgress(e) {
             },
             credentials: "include",
             body: JSON.stringify({
-                type, accountNumber, amount
+                type, accountNumber, amount, memo
             })
         });
         parsed = await fetchJsonSafe(res);
