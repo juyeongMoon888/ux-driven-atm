@@ -10,4 +10,5 @@ public class TransferDto {
     private final TransferType type;
     private final String accountNumber;
     private final Long amount;
+    private final String memo;
 }
