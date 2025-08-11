@@ -1,10 +1,7 @@
 package com.mybank.atmweb.service;
 
 import com.mybank.atmweb.domain.*;
-import com.mybank.atmweb.dto.AccountRequestDto;
-import com.mybank.atmweb.dto.AccountSummaryDto;
-import com.mybank.atmweb.dto.TransactionSummaryDto;
-import com.mybank.atmweb.dto.TransferDto;
+import com.mybank.atmweb.dto.*;
 import com.mybank.atmweb.global.code.ErrorCode;
 import com.mybank.atmweb.global.exception.user.CustomException;
 import com.mybank.atmweb.repository.AccountRepository;
@@ -126,6 +123,23 @@ public class AccountService {
                         tx.getAmount()
                 ))
                 .collect(Collectors.toList());
+    }
+
+    public TransactionDetailSummaryDto getHistoryDetail(Long transactionId, Long userId) {
+        Transaction tx = getTransactionDetailOrThrow(transactionId, userId);
+
+        return new TransactionDetailSummaryDto(
+                tx.getCreatedAt(),
+                tx.getTransfer(),
+                tx.getAmount(),
+                tx.getBalanceAfter(),
+                tx.getMemo()
+        );
+    }
+
+    public Transaction getTransactionDetailOrThrow(Long transactionId, Long userId) {
+        return transactionRepository.findByIdAndAccount_Owner_Id(transactionId, userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.TRANSACTION_DETAIL_NOT_FOUND));
     }
 
 
