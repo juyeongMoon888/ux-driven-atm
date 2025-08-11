@@ -50,8 +50,9 @@ public class PageController {
         return "bank/transfer";
     }
 
-    @GetMapping("/transactions")
-    public String transactionForm() {
-        return "transactions";
+    @GetMapping("/bank/account-history")
+    public String accountHistoryList(@RequestParam String accountNumber, Model model) {
+        model.addAttribute("accountNumber", accountNumber);
+        return "bank/account-history";
     }
 }
