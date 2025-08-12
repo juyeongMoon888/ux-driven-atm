@@ -2,36 +2,38 @@ import { fetchWithAuth } from "/js/lib/fetchWithAuth.js";
 import { fetchJsonSafe } from "/js/lib/fetchJsonSafe.js";
 import { handleNetworkOrApiError } from "/js/lib/network/handleNetworkOrApiError.js";
 import { handleApiFailure } from "/js/lib/api/handleApiFailure.js";
-
 document.addEventListener("DOMContentLoaded", main);
-let historyDetail;
+let historyDetail, date, type, after, memoInput, saveBtn, transactionId;
 
 function main() {
     initElement();
-    bindEvents();
     accountHistoryDetail();
+    bindEvents();
 }
 
 function initElement() {
     historyDetail = document.getElementById("historyDetail");
+    date = document.getElementById("tx-date");
+    type = document.getElementById("tx-type");
+    after = document.getElementById("tx-after");
+    memoInput = document.getElementById("tx-memo");
+    saveBtn = document.getElementById("btn-memo-save");
 }
 
-function bindEvents(){
-    bindDynamicButtonEvents();
+function bindEvents() {
+    saveBtn.addEventListener("click", saveTransactionMemo);
 }
 
 async function accountHistoryDetail() {
     let res, parsed;
-    const txId = historyDetail.dataset.transactionId;
-
+    transactionId = historyDetail.dataset.transactionId;
     try {
         res = await fetchWithAuth(`/api/bank/account-history/${transactionId}`, {
             method: "GET",
             credentials: "include"
         });
         parsed = await fetchJsonSafe(res);
-
-        const transactions = parsed.data;
+        const transaction = parsed.data;
 
         const transferMap = {
             DEPOSIT: "입금",
@@ -39,21 +41,10 @@ async function accountHistoryDetail() {
         };
 
         if (res.ok) {
-            if (Array.isArray(transactions)) {
-                for (const transaction of transactions) {
-                   const txDiv = document.createElement("div")
-                   txDiv.innerHTML = `
-                        <p>거래시각: ${transaction.createdAt}</p>
-                        <p>거래유형: ${transferMap[transaction.transfer] || "알 수 없음"}</p>
-                        <p>금액: ${formatKRW(transaction.amount)}원</p>
-                        <p>거래 후 잔액: ${formatKRW(transaction.balanceAfter)}원</p>
-                        <p>메모: ${transaction.memo}</p>
-                        <hr/>
-                   `;
-                   historyDetail.appendChild(txDiv);
-                }
-                return true;
-            }
+            date.textContent = transaction.createdAt;
+            type.textContent = transferMap[transaction.transfer] || "알 수 없음";
+            after.textContent = formatKRW(transaction.balanceAfter);
+            memoInput.value = transaction.memo ?? "";
         } else {
             handleApiFailure(res, parsed);
         }
@@ -67,4 +58,33 @@ function formatKRW(value) {
   const n = typeof value === "string" ? Number(value) : value;
   if (!Number.isFinite(n)) return "-";
   return n.toLocaleString("ko-KR");
+}
+
+async function saveTransactionMemo(e) {
+    e.preventDefault();
+    let res, parsed;
+    const memo = memoInput.value.trim();
+    if (memo.length > 100) {
+        alert("메모는 최대 100자입니다.")
+        return;
+    }
+
+    try {
+        res = await fetchWithAuth(`/api/bank/account-history/${transactionId}/memo`, {
+            method: "PATCH",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ memo })
+        });
+        parsed = await fetchJsonSafe(res);
+
+        if (res.ok) {
+            location.href = `/bank/account-history?accountNumber=${parsed.data.accountNumber}`
+            return true;
+        } else {
+            handleApiFailure(res, parsed);
+        }
+    } catch(err) {
+        handleNetworkOrApiError(err);
+    }
 }
