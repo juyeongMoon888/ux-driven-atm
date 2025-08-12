@@ -61,7 +61,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 "/api/auth/logout",
                 "/api/auth/check",
                 "/bank",
-                "/bank/**",
+                "/bank/open-account",
+                "/bank/accounts",
+                "/bank/deposit-withdraw",
+                "/bank/account-history",
+                "/bank/account-history/**",
                 "/actuator/**"
         );
         if (whitelist.contains(path) ||
