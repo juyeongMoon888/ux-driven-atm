@@ -16,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -85,9 +86,27 @@ public class AccountApiController {
             String token = jwtUtil.extractToken(request);
             Long userId = jwtUtil.getUserId(token);
 
-            List<TransactionDetailSummaryDto> transactionDetail = accountService.getHistoryDetail(transactionId, userId);
+            TransactionDetailSummaryDto transactionDetail = accountService.getHistoryDetail(transactionId, userId);
 
             return responseUtil.buildResponse(SuccessCode.READ_SUCCESS, HttpStatus.OK, transactionDetail);
+        } catch (JwtException | IllegalArgumentException e) {
+            throw new CustomException(ErrorCode.TOKEN_INVALID);
+        }
+    }
+
+    @PatchMapping("/account-history/{transactionId}/memo")
+    public ResponseEntity<?> updateTransactionMemo(
+            @PathVariable Long transactionId,
+            @RequestBody MemoUpdateRequest memoRequest,
+            HttpServletRequest request
+    ) {
+        try {
+            String token = jwtUtil.extractToken(request);
+            Long userId = jwtUtil.getUserId(token);
+
+            String accountNumber = accountService.updateTransactionMemo(transactionId, userId, memoRequest);
+
+            return responseUtil.buildResponse(SuccessCode.UPDATE_SUCCESS, HttpStatus.OK, Map.of("accountNumber", accountNumber));
         } catch (JwtException | IllegalArgumentException e) {
             throw new CustomException(ErrorCode.TOKEN_INVALID);
         }
