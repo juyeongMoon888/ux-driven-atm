@@ -47,4 +47,8 @@ public class Transaction {
     @CreatedDate
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    public void setMemo(String memo) {
+        this.memo = memo;
+    }
 }
