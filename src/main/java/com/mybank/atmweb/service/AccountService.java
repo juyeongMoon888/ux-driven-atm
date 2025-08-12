@@ -120,7 +120,8 @@ public class AccountService {
                         tx.getId(),
                         tx.getCreatedAt(),
                         tx.getTransfer(),
-                        tx.getAmount()
+                        tx.getAmount(),
+                        tx.getMemo()
                 ))
                 .collect(Collectors.toList());
     }
