@@ -142,6 +142,15 @@ public class AccountService {
                 .orElseThrow(() -> new CustomException(ErrorCode.TRANSACTION_DETAIL_NOT_FOUND));
     }
 
+    @Transactional
+    public String updateTransactionMemo(Long transactionId, Long userId, MemoUpdateRequest memoRequest) {
+        String memo = memoRequest.getMemo();
 
+        Transaction tx = transactionRepository.findByIdAndAccount_Owner_Id(transactionId, userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.TRANSACTION_NOT_FOUND));
 
+        tx.setMemo(memo);
+
+        return tx.getAccount().getAccountNumber();
+    }
 }
