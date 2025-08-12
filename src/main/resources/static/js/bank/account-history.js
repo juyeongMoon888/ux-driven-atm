@@ -40,14 +40,15 @@ async function accountHistory() {
 
         if (res.ok) {
             if (Array.isArray(transactions)) {
-                for (const tx of transactions) {
+                for (const transaction of transactions) {
                    const txDiv = document.createElement("div")
                    txDiv.innerHTML = `
-                        <p>내역번호: ${tx.id}</p>
-                        <p>거래시각: ${tx.createdAt}</p>
-                        <p>거래유형: ${transferMap[tx.transfer] || "알 수 없음"}</p>
-                        <p>금액: ${formatKRW(tx.amount)}원</p>
-                        <button class="detail-btn" data-tx-id="${tx.id}">상세보기</button>
+                        <p>내역번호: ${transaction.id}</p>
+                        <p>거래시각: ${transaction.createdAt}</p>
+                        <p>거래유형: ${transferMap[transaction.transfer] || "알 수 없음"}</p>
+                        <p>금액: ${formatKRW(transaction.amount)}원</p>
+                        <p>메모: ${transaction.memo}</p>
+                        <button class="detail-btn" data-transaction-id="${transaction.id}">상세보기</button>
                         <hr/>
                    `;
                    historyList.appendChild(txDiv);
@@ -64,8 +65,8 @@ async function accountHistory() {
 function bindDynamicButtonEvents() {
     document.addEventListener("click", (e) => {
         if (e.target.classList.contains("detail-btn")) {
-            const txId = e.target.dataset.txId;
-            location.href = `/bank/account-history-detail?txId=${txId}`;
+            const transactionId = e.target.dataset.transactionId;
+            location.href = `/bank/account-history/${transactionId}`;
         }
     });
 }
