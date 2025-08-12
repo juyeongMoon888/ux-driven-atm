@@ -52,19 +52,33 @@ public class AccountApiController {
         }
     }
 
-    @PostMapping("/transfer")
-    public ResponseEntity<?> transfer(@RequestBody TransferDto dto, HttpServletRequest request) {
+    @PostMapping("/deposit")
+    public ResponseEntity<?> deposit(@RequestBody TransferDto dto, HttpServletRequest request) {
         try {
             String token = jwtUtil.extractToken(request);
             Long userId = jwtUtil.getUserId(token);
 
-            accountService.updateBalance(dto, userId);
+            accountService.handleDepositWithdraw(dto, userId);
 
             return responseUtil.buildResponse(SuccessCode.UPDATE_SUCCESS, HttpStatus.OK, null);
         } catch (JwtException | IllegalArgumentException e) {
             throw new CustomException(ErrorCode.TOKEN_INVALID);
         }
     }
+    @PostMapping("/withdraw")
+    public ResponseEntity<?> withdraw(@RequestBody TransferDto dto, HttpServletRequest request) {
+        try {
+            String token = jwtUtil.extractToken(request);
+            Long userId = jwtUtil.getUserId(token);
+
+            accountService.handleDepositWithdraw(dto, userId);
+
+            return responseUtil.buildResponse(SuccessCode.UPDATE_SUCCESS, HttpStatus.OK, null);
+        } catch (JwtException | IllegalArgumentException e) {
+            throw new CustomException(ErrorCode.TOKEN_INVALID);
+        }
+    }
+
 
     @GetMapping("/account-history")
     public ResponseEntity<?> accountHistoryList(@RequestParam String accountNumber, HttpServletRequest request) {
