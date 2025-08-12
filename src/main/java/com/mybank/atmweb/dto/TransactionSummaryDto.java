@@ -13,4 +13,5 @@ public class TransactionSummaryDto {
     private final LocalDateTime createdAt;
     private final TransferType transfer;
     private final Long amount;
+    private final String memo;
 }
