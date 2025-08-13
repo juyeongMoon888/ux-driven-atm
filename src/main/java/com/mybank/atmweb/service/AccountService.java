@@ -13,7 +13,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -79,7 +78,7 @@ public class AccountService {
     }
 
     @Transactional
-    public void updateBalance(TransferDto dto, Long userId) {
+    public void handleDepositWithdraw(TransferDto dto, Long userId) {
         TransferType type = dto.getType();
         String accountNumber = dto.getAccountNumber();
         Long amount = dto.getAmount();
