@@ -2,13 +2,16 @@ package com.mybank.atmweb.controller;
 
 import com.mybank.atmweb.auth.JwtUtil;
 import com.mybank.atmweb.dto.*;
+import com.mybank.atmweb.external.dto.ExternalAccountVerifyResponse;
 import com.mybank.atmweb.global.ResponseUtil;
 import com.mybank.atmweb.global.code.ErrorCode;
 import com.mybank.atmweb.global.code.SuccessCode;
 import com.mybank.atmweb.global.exception.user.CustomException;
 import com.mybank.atmweb.service.AccountService;
+import com.mybank.atmweb.service.TransferService;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -27,9 +30,10 @@ public class AccountApiController {
     private final AccountService accountService;
     private final JwtUtil jwtUtil;
     private final ResponseUtil responseUtil;
+    private final TransferService transferService;
 
     @PostMapping("/open-account")
-    public ResponseEntity<?> createAccount(@RequestBody AccountRequestDto dto, HttpServletRequest request) {
+    public ResponseEntity<?> openInternalAccount(@RequestBody AccountOepnRequestDto dto, HttpServletRequest request) {
         String token = jwtUtil.extractToken(request);
         Long userId = jwtUtil.getUserId(token);
 
@@ -65,6 +69,7 @@ public class AccountApiController {
             throw new CustomException(ErrorCode.TOKEN_INVALID);
         }
     }
+
     @PostMapping("/withdraw")
     public ResponseEntity<?> withdraw(@RequestBody TransferDto dto, HttpServletRequest request) {
         try {
@@ -78,7 +83,6 @@ public class AccountApiController {
             throw new CustomException(ErrorCode.TOKEN_INVALID);
         }
     }
-
 
     @GetMapping("/account-history")
     public ResponseEntity<?> accountHistoryList(@RequestParam String accountNumber, HttpServletRequest request) {
@@ -124,5 +128,11 @@ public class AccountApiController {
         } catch (JwtException | IllegalArgumentException e) {
             throw new CustomException(ErrorCode.TOKEN_INVALID);
         }
+    }
+
+    @PostMapping("/transfer/verify-external")
+    public ResponseEntity<?> validateExternalAccount(@Valid @RequestBody ExternalAccountVerifyRequest dto) {
+        ExternalAccountVerifyResponse result = transferService.verifyExternalAccount(dto);
+        return ResponseEntity.ok(result);
     }
 }
