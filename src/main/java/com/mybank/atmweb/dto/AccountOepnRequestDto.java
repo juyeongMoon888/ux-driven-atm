@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor
-public class AccountRequestDto {
+public class AccountOepnRequestDto {
     private final String bank;
     private final String password;
     private final String accountName;
