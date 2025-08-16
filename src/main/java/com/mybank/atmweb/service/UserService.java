@@ -30,8 +30,8 @@ public class UserService {
         User user = new User();
         user.setLoginId(form.getLoginId());
         user.setPassword(passwordEncoder.encode(form.getPassword()));
-        user.setName(formatResidentNumber(form.getName()));
-        user.setResidentNumber(form.getResidentNumber());
+        user.setName(form.getName());
+        user.setResidentNumber(formatResidentNumber(form.getResidentNumber()));
         user.setGender(form.getGender());
         user.setPhoneNumber(form.getPhoneNumber());
         user.setRole(Role.USER);
@@ -42,11 +42,10 @@ public class UserService {
         UserProfile profile = new UserProfile();
         profile.setUser(user);
         profile.setName(user.getName());
-        profile.setBirth(user.getResidentNumber());
+        profile.setBirth(extractBirthFromResidentNumber(user.getResidentNumber()));
+        profile.setPhone(user.getPhoneNumber());
         userProfileRepository.save(profile);
-
     }
-    //아이디 중복 확인
     public boolean isDuplicatedLoginId(String loginId) {
         return userRepository.findByLoginId(loginId).isPresent();
     }
@@ -57,5 +56,9 @@ public class UserService {
         }
         throw new IllegalArgumentException("주민번호 형식 오류");
 
+    }
+    private String extractBirthFromResidentNumber(String rn) {
+        String birth = rn.substring(0, 6);
+        return birth.substring(0, 2) + "-" + birth.substring(2, 4) + "-" + birth.substring(4);
     }
 }
