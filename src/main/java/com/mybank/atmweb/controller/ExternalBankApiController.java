@@ -21,9 +21,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/external-bank")
 @RestController
 public class ExternalBankApiController {
-    private final ExternalBankClient externalBankClient;
-    private final ExternalAccountRequestAssembler assembler;
-
     private final ExternalAccountService externalAccountService;
 
     @PostMapping("/open-account")
