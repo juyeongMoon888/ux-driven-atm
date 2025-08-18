@@ -1,13 +1,13 @@
-package com.mybank.atmweb.domain;
+package com.mybank.atmweb.domain.user;
 
+import com.mybank.atmweb.domain.Role;
+import com.mybank.atmweb.domain.account.Account;
 import jakarta.persistence.*;
 import jakarta.transaction.Transactional;
-import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @NoArgsConstructor

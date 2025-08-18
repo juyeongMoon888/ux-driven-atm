@@ -1,4 +1,4 @@
-package com.mybank.atmweb.domain;
+package com.mybank.atmweb.domain.user;
 
 import jakarta.persistence.*;
 import lombok.Getter;
