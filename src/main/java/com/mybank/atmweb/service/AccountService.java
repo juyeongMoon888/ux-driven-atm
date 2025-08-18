@@ -22,27 +22,22 @@ import static com.mybank.atmweb.global.code.ErrorCode.BANK_INVALID;
 @RequiredArgsConstructor
 @Service
 public class AccountService {
-
     private final PasswordEncoder passwordEncoder;
     private final AccountRepository accountRepository;
     private final UserRepository userRepository;
     private final TransactionRepository transactionRepository;
 
-    public void createAccount(Long userId, AccountRequestDto dto) {
+    public void createAccount(Long userId, AccountOpenRequestDto dto) {
         BankType bankType;
 
         try {
             bankType = BankType.valueOf(dto.getBank());
-
         } catch (IllegalArgumentException e) {
-            log.error("[BANK_INVALID] dto.getBank() = {}, BankType enum과 매핑 실패", dto.getBank());
             throw new CustomException(BANK_INVALID);
         }
 
         User user = findUserByIdOrThrow(userId);
-
         Account account = Account.builder()
-                //계좌 소유자 정보 연결
                 .owner(user)
                 .accountName(dto.getAccountName())
                 .bank(bankType)
@@ -50,9 +45,7 @@ public class AccountService {
                 .balance(0L)
                 .password(passwordEncoder.encode(dto.getPassword()))
                 .build();
-
-        Account saved = accountRepository.save(account);
-        log.info("✅ 저장된 계좌 ID: {}", saved.getId());
+        accountRepository.save(account);
     }
 
     public String generateAccountNumber(String prefix) {
