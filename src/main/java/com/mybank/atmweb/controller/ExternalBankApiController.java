@@ -1,11 +1,7 @@
 package com.mybank.atmweb.controller;
 
-import com.mybank.atmweb.assembler.ExternalAccountRequestAssembler;
 import com.mybank.atmweb.dto.AccountOpenRequestDto;
-import com.mybank.atmweb.dto.ExternalAccountOpenResponseDto;
-import com.mybank.atmweb.dto.ExternalOpenAccountRequestDto;
 import com.mybank.atmweb.dto.OperationSummary;
-import com.mybank.atmweb.external.client.ExternalBankClient;
 import com.mybank.atmweb.security.CustomUserDetails;
 import com.mybank.atmweb.service.ExternalAccountService;
 import lombok.RequiredArgsConstructor;
@@ -27,11 +23,8 @@ public class ExternalBankApiController {
     public ResponseEntity<?> openExternalAccount(
             @RequestBody AccountOpenRequestDto dto,
             @AuthenticationPrincipal CustomUserDetails user) {
-
         Long userId = user.getId();
-
         OperationSummary response = externalAccountService.externalAccountOpen(dto, userId);
-
         return ResponseEntity.ok(response);
     }
 }
