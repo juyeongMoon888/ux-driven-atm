@@ -38,6 +38,7 @@ public class ExternalAccountService {
                 .accountNumber(data.getAccountNumber())
                 .accountName(data.getAccountName())
                 .externalAccountId(data.getExternalAccountId())
+                .balance(data.getBalance())
                 .build();
         accountRepository.save(externalAccount);
 
