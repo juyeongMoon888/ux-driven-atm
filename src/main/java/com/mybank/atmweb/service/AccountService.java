@@ -1,8 +1,14 @@
 package com.mybank.atmweb.service;
 
+import com.mybank.atmweb.application.AccountQueryService;
+import com.mybank.atmweb.application.TransactionQueryService;
 import com.mybank.atmweb.domain.*;
+import com.mybank.atmweb.domain.account.Account;
 import com.mybank.atmweb.domain.account.AccountNumberGenerator;
+import com.mybank.atmweb.domain.transaction.Transaction;
+import com.mybank.atmweb.domain.user.User;
 import com.mybank.atmweb.dto.*;
+import com.mybank.atmweb.dto.account.request.AccountOpenRequestDto;
 import com.mybank.atmweb.global.code.ErrorCode;
 import com.mybank.atmweb.global.exception.user.CustomException;
 import com.mybank.atmweb.repository.AccountRepository;
@@ -28,6 +34,8 @@ public class AccountService {
     private final UserRepository userRepository;
     private final TransactionRepository transactionRepository;
     private final AccountNumberGenerator accountNumberGenerator;
+    private final AccountQueryService accountQueryService;
+    private final TransactionQueryService transactionQueryService;
 
     public void createAccount(Long userId, AccountOpenRequestDto dto) {
         BankType bankType;
@@ -76,7 +84,7 @@ public class AccountService {
         Long amount = dto.getAmount();
         String memo = dto.getMemo();
 
-        Account account = findAccountByAccountNumberAndUserId(accountNumber, userId);
+        Account account = accountQueryService.findAccountByAccountNumberAndUserId(accountNumber, userId);
 
         long before = account.getBalance();
         if (type == TransferType.DEPOSIT) {
@@ -87,11 +95,6 @@ public class AccountService {
         long after = account.getBalance();
 
         recordTransaction(account, before, after, dto);
-    }
-
-    public Account findAccountByAccountNumberAndUserId(String accountNumber, Long userId) {
-        return accountRepository.findByAccountNumberAndOwner_Id(accountNumber, userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.ACCOUNT_NOT_FOUND_FOR_USER));
     }
 
     private void recordTransaction(Account account,
@@ -118,7 +121,7 @@ public class AccountService {
     }
 
     public TransactionDetailSummaryDto getHistoryDetail(Long transactionId, Long userId) {
-        Transaction tx = getTransactionDetailOrThrow(transactionId, userId);
+        Transaction tx = transactionQueryService.getTransactionDetailOrThrow(transactionId, userId);
 
         return new TransactionDetailSummaryDto(
                 tx.getCreatedAt(),
@@ -127,11 +130,6 @@ public class AccountService {
                 tx.getBalanceAfter(),
                 tx.getMemo()
         );
-    }
-
-    public Transaction getTransactionDetailOrThrow(Long transactionId, Long userId) {
-        return transactionRepository.findByIdAndAccount_Owner_Id(transactionId, userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.TRANSACTION_DETAIL_NOT_FOUND));
     }
 
     @Transactional
