@@ -4,7 +4,6 @@ import com.mybank.atmweb.domain.Account;
 import com.mybank.atmweb.domain.BankType;
 import com.mybank.atmweb.domain.User;
 import com.mybank.atmweb.dto.ExternalAccountOpenResponseDto;
-import jakarta.persistence.Entity;
 
 public class AccountFactory {
     private AccountFactory() {
