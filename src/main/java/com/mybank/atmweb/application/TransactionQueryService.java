@@ -14,7 +14,7 @@ public class TransactionQueryService {
     private final TransactionRepository transactionRepository;
 
     @Transactional
-    public Transaction getTransactionDetailOrThrow(Long transactionId, Long userId) {
+    public Transaction getTransactionOrThrow(Long transactionId, Long userId) {
         return transactionRepository.findByIdAndAccount_Owner_Id(transactionId, userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.TRANSACTION_DETAIL_NOT_FOUND));
     }
