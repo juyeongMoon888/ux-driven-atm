@@ -1,9 +1,8 @@
 package com.mybank.atmweb.domain;
 
+import com.mybank.atmweb.domain.account.Account;
 import jakarta.persistence.*;
-import jakarta.transaction.Transactional;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
