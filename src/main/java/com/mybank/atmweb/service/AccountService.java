@@ -1,6 +1,7 @@
 package com.mybank.atmweb.service;
 
 import com.mybank.atmweb.domain.*;
+import com.mybank.atmweb.domain.account.AccountNumberGenerator;
 import com.mybank.atmweb.dto.*;
 import com.mybank.atmweb.global.code.ErrorCode;
 import com.mybank.atmweb.global.exception.user.CustomException;
@@ -26,6 +27,7 @@ public class AccountService {
     private final AccountRepository accountRepository;
     private final UserRepository userRepository;
     private final TransactionRepository transactionRepository;
+    private final AccountNumberGenerator accountNumberGenerator;
 
     public void createAccount(Long userId, AccountOpenRequestDto dto) {
         BankType bankType;
@@ -37,20 +39,17 @@ public class AccountService {
         }
 
         User user = findUserByIdOrThrow(userId);
+
+        String accountNumber = accountNumberGenerator.generate(bankType.getPrefix());
         Account account = Account.builder()
                 .owner(user)
                 .accountName(dto.getAccountName())
                 .bank(bankType)
-                .accountNumber(generateAccountNumber(bankType.getPrefix()))
+                .accountNumber(accountNumber)
                 .balance(0L)
                 .password(passwordEncoder.encode(dto.getPassword()))
                 .build();
         accountRepository.save(account);
-    }
-
-    public String generateAccountNumber(String prefix) {
-        String randomDigits = String.format("%08d", new Random().nextInt(100_100_100));
-        return prefix + randomDigits;
     }
 
     public User findUserByIdOrThrow(Long id) {
