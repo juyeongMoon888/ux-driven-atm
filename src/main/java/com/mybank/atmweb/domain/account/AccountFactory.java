@@ -10,6 +10,7 @@ public class AccountFactory {
 
     }
 
+
     public static Account fromExternalResponse(User user, ExternalAccountOpenResponseDto data) {
         return Account.builder()
                 .owner(user)
