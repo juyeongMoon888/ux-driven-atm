@@ -4,12 +4,14 @@ import com.mybank.atmweb.assembler.ExternalAccountRequestAssembler;
 import com.mybank.atmweb.domain.Account;
 import com.mybank.atmweb.domain.BankType;
 import com.mybank.atmweb.domain.User;
+import com.mybank.atmweb.domain.factory.AccountFactory;
 import com.mybank.atmweb.dto.*;
 import com.mybank.atmweb.external.client.ExternalBankClient;
 import com.mybank.atmweb.global.code.ErrorCode;
 import com.mybank.atmweb.global.exception.user.CustomException;
 import com.mybank.atmweb.repository.AccountRepository;
 import com.mybank.atmweb.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -21,25 +23,23 @@ public class ExternalAccountService {
     private final AccountRepository accountRepository;
     private final UserRepository userRepository;
 
+    @Transactional
     public OperationSummary externalAccountOpen(AccountOpenRequestDto dto, Long userId) {
+        // 요청 DTO 조립
+        ExternalOpenAccountRequestDto request = assembler.toExternalRequest(dto, userId);
 
-        ExternalOpenAccountRequestDto assemble = assembler.toExternalRequest(dto, userId);
-
-        ApiResponse<ExternalAccountOpenResponseDto> response = externalBankClient.createAccount(assemble);
-
+        //외부 은행 호출
+        ApiResponse<ExternalAccountOpenResponseDto> response = externalBankClient.createAccount(request);
         ExternalAccountOpenResponseDto data = response.getData();
 
+        //User 조회
         User user = userRepository.findById(data.getUserId())
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
-        Account externalAccount = Account.builder()
-                .owner(user)
-                .bank(BankType.valueOf(data.getBankType()))
-                .accountNumber(data.getAccountNumber())
-                .accountName(data.getAccountName())
-                .externalAccountId(data.getExternalAccountId())
-                .balance(data.getBalance())
-                .build();
+        //AccountFactory로 엔티티 생성
+        Account externalAccount = AccountFactory.fromExternalResponse(user, data);
+
+        //영속화
         accountRepository.save(externalAccount);
 
         return new OperationSummary(response.getCode(), response.getMessage());
