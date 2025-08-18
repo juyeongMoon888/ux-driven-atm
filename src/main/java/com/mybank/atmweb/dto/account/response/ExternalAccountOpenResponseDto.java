@@ -13,4 +13,5 @@ public class ExternalAccountOpenResponseDto {
     private final String accountNumber;
     private final String accountName;
     private final String externalAccountId;
+    private final Long balance;
 }
