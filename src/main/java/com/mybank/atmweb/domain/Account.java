@@ -18,11 +18,15 @@ public class Account {
 
     protected Account() {
     }
+    @Column(updatable = false, nullable = false)
     @Id @GeneratedValue
     private Long id;
 
     private String accountNumber;
     private String accountName;
+
+    @Column(name = "external_account_id")
+    private String externalAccountId; //External일 때만 채움 (internal이면 null)
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
