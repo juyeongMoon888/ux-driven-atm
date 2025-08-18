@@ -1,11 +1,12 @@
-package com.mybank.atmweb.domain;
+package com.mybank.atmweb.domain.account;
 
+import com.mybank.atmweb.domain.BankType;
+import com.mybank.atmweb.domain.User;
 import jakarta.persistence.*;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
@@ -32,7 +33,7 @@ public class Account {
     @JoinColumn(name = "user_id")
     private User owner;
 
-    private String password;
+    private String password; //External이면 null
 
     private Long balance;
 
