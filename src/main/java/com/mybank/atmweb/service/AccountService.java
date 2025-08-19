@@ -107,18 +107,6 @@ public class AccountService {
         transactionRepository.save(tx);
     }
 
-    public TransactionDetailSummaryDto getHistoryDetail(Long transactionId, Long userId) {
-        Transaction tx = transactionQueryService.getTransactionOrThrow(transactionId, userId);
-
-        return new TransactionDetailSummaryDto(
-                tx.getCreatedAt(),
-                tx.getTransfer(),
-                tx.getAmount(),
-                tx.getBalanceAfter(),
-                tx.getMemo()
-        );
-    }
-
     @Transactional
     public String updateTransactionMemo(Long transactionId, Long userId, MemoUpdateRequest memoRequest) {
         String memo = memoRequest.getMemo();
