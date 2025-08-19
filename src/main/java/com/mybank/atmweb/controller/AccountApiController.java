@@ -1,5 +1,7 @@
 package com.mybank.atmweb.controller;
 
+import com.mybank.atmweb.application.AccountQueryService;
+import com.mybank.atmweb.application.TransactionCommandService;
 import com.mybank.atmweb.application.TransactionQueryService;
 import com.mybank.atmweb.auth.JwtUtil;
 import com.mybank.atmweb.dto.*;
@@ -9,6 +11,7 @@ import com.mybank.atmweb.global.ResponseUtil;
 import com.mybank.atmweb.global.code.ErrorCode;
 import com.mybank.atmweb.global.code.SuccessCode;
 import com.mybank.atmweb.global.exception.user.CustomException;
+import com.mybank.atmweb.security.CustomUserDetails;
 import com.mybank.atmweb.service.AccountService;
 import com.mybank.atmweb.service.TransferService;
 import io.jsonwebtoken.JwtException;
@@ -18,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -34,103 +38,67 @@ public class AccountApiController {
     private final ResponseUtil responseUtil;
     private final TransferService transferService;
     private final TransactionQueryService transactionQueryService;
+    private final TransactionCommandService transactionCommandService;
+    private final AccountQueryService accountQueryService;
 
     @PostMapping("/open-account")
-    public ResponseEntity<?> openInternalAccount(@RequestBody AccountOpenRequestDto dto, HttpServletRequest request) {
-        String token = jwtUtil.extractToken(request);
-        Long userId = jwtUtil.getUserId(token);
-
+    public ResponseEntity<?> openInternalAccount(@RequestBody AccountOpenRequestDto dto, HttpServletRequest request,
+                                                 @AuthenticationPrincipal CustomUserDetails user) {
+        Long userId = user.getId();
         accountService.createAccount(userId, dto);
-
         return responseUtil.buildResponse(SuccessCode.ACCOUNT_CREATED, HttpStatus.OK, null);
     }
 
     @GetMapping("/account-list")
-    public ResponseEntity<?> accountList(HttpServletRequest request) {
-        try {
-            String token = jwtUtil.extractToken(request);
-            Long userId = jwtUtil.getUserId(token);
-
-            List<AccountSummaryDto> accountList = accountService.getAccountSummariesByUserId(userId);
-
-            return responseUtil.buildResponse(SuccessCode.READ_SUCCESS, HttpStatus.OK, accountList);
-        } catch (JwtException | IllegalArgumentException e) {
-            throw new CustomException(ErrorCode.TOKEN_INVALID);
-        }
+    public ResponseEntity<?> accountList(HttpServletRequest request,
+                                         @AuthenticationPrincipal CustomUserDetails user) {
+        Long userId = user.getId();
+        List<AccountSummaryDto> accountList = accountQueryService.getListByOwner_Id(userId);
+        return responseUtil.buildResponse(SuccessCode.READ_SUCCESS, HttpStatus.OK, accountList);
     }
 
     @PostMapping("/deposit")
-    public ResponseEntity<?> deposit(@RequestBody TransferDto dto, HttpServletRequest request) {
-        try {
-            String token = jwtUtil.extractToken(request);
-            Long userId = jwtUtil.getUserId(token);
-
-            accountService.handleDepositWithdraw(dto, userId);
-
-            return responseUtil.buildResponse(SuccessCode.UPDATE_SUCCESS, HttpStatus.OK, null);
-        } catch (JwtException | IllegalArgumentException e) {
-            throw new CustomException(ErrorCode.TOKEN_INVALID);
-        }
+    public ResponseEntity<?> deposit(@RequestBody TransferDto dto, HttpServletRequest request,
+                                     @AuthenticationPrincipal CustomUserDetails user) {
+        Long userId = user.getId();
+        accountService.handleDepositWithdraw(dto, userId);
+        return responseUtil.buildResponse(SuccessCode.UPDATE_SUCCESS, HttpStatus.OK, null);
     }
 
     @PostMapping("/withdraw")
-    public ResponseEntity<?> withdraw(@RequestBody TransferDto dto, HttpServletRequest request) {
-        try {
-            String token = jwtUtil.extractToken(request);
-            Long userId = jwtUtil.getUserId(token);
-
-            accountService.handleDepositWithdraw(dto, userId);
-
-            return responseUtil.buildResponse(SuccessCode.UPDATE_SUCCESS, HttpStatus.OK, null);
-        } catch (JwtException | IllegalArgumentException e) {
-            throw new CustomException(ErrorCode.TOKEN_INVALID);
-        }
+    public ResponseEntity<?> withdraw(@RequestBody TransferDto dto, HttpServletRequest request,
+                                      @AuthenticationPrincipal CustomUserDetails user) {
+        Long userId = user.getId();
+        accountService.handleDepositWithdraw(dto, userId);
+        return responseUtil.buildResponse(SuccessCode.UPDATE_SUCCESS, HttpStatus.OK, null);
     }
 
     @GetMapping("/account-history")
-    public ResponseEntity<?> accountHistoryList(@RequestParam String accountNumber, HttpServletRequest request) {
-        try {
-            String token = jwtUtil.extractToken(request);
-            Long userId = jwtUtil.getUserId(token);
-
-            List<TransactionSummaryDto> transactionHistory = transactionQueryService.getTransactionHistory(accountNumber, userId);
-
-            return responseUtil.buildResponse(SuccessCode.READ_SUCCESS, HttpStatus.OK, transactionHistory);
-        } catch (JwtException | IllegalArgumentException e) {
-            throw new CustomException(ErrorCode.TOKEN_INVALID);
-        }
+    public ResponseEntity<?> accountHistoryList(@RequestParam String accountNumber, HttpServletRequest request,
+                                                @AuthenticationPrincipal CustomUserDetails user) {
+        Long userId = user.getId();
+        List<TransactionSummaryDto> transactionHistory = transactionQueryService.getTransactionHistory(accountNumber, userId);
+        return responseUtil.buildResponse(SuccessCode.READ_SUCCESS, HttpStatus.OK, transactionHistory);
     }
 
     @GetMapping("/account-history/{transactionId}")
-    public ResponseEntity<?> getHistoryDetailApi(@PathVariable Long transactionId, HttpServletRequest request) {
-        try {
-            String token = jwtUtil.extractToken(request);
-            Long userId = jwtUtil.getUserId(token);
-
-            TransactionDetailSummaryDto transactionDetail = transactionQueryService.getTransactionHistoryDetail(transactionId, userId);
-
-            return responseUtil.buildResponse(SuccessCode.READ_SUCCESS, HttpStatus.OK, transactionDetail);
-        } catch (JwtException | IllegalArgumentException e) {
-            throw new CustomException(ErrorCode.TOKEN_INVALID);
-        }
+    public ResponseEntity<?> getHistoryDetailApi(@PathVariable Long transactionId, HttpServletRequest request,
+                                                 @AuthenticationPrincipal CustomUserDetails user) {
+        Long userId = user.getId();
+        TransactionDetailSummaryDto transactionDetail = transactionQueryService.getTransactionHistoryDetail(transactionId, userId);
+        return responseUtil.buildResponse(SuccessCode.READ_SUCCESS, HttpStatus.OK, transactionDetail);
     }
 
     @PatchMapping("/account-history/{transactionId}/memo")
     public ResponseEntity<?> updateTransactionMemo(
             @PathVariable Long transactionId,
             @RequestBody MemoUpdateRequest memoRequest,
-            HttpServletRequest request
+            HttpServletRequest request,
+            @AuthenticationPrincipal CustomUserDetails user
     ) {
-        try {
-            String token = jwtUtil.extractToken(request);
-            Long userId = jwtUtil.getUserId(token);
-
-            String accountNumber = accountService.updateTransactionMemo(transactionId, userId, memoRequest);
-
-            return responseUtil.buildResponse(SuccessCode.UPDATE_SUCCESS, HttpStatus.OK, Map.of("accountNumber", accountNumber));
-        } catch (JwtException | IllegalArgumentException e) {
-            throw new CustomException(ErrorCode.TOKEN_INVALID);
-        }
+        Long userId = user.getId();
+        String accountNumber = transactionCommandService.updateTransactionMemo(transactionId, userId, memoRequest);
+        return responseUtil.buildResponse(SuccessCode.UPDATE_SUCCESS, HttpStatus.OK, Map.of("accountNumber", accountNumber));
     }
 
     @PostMapping("/transfer/verify-external")
