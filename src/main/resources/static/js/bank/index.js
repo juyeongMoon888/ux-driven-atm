@@ -2,14 +2,16 @@ import { fetchWithAuth } from "/js/lib/fetchWithAuth.js"
 import { fetchJsonSafe } from "/js/lib/fetchJsonSafe.js"
 import { handleApiFailure } from "/js/lib/api/handleApiFailure.js"
 import { handleNetworkOrApiError } from "/js/lib/network/handleNetworkOrApiError.js"
+import { getAccessToken } from "/js/lib/storage/getAccessToken.js"
 
 document.addEventListener("DOMContentLoaded", main);
 let accountCreateBtn, bankPage, myAccountToggleBtn;
 
 async function main() {
+    const ok = await checkTokenBeforeEnteringBank();
+    if (!ok) return;
     initElement();
     bindEvents();
-    await checkTokenBeforeEnteringBank();
 }
 
 function initElement() {
@@ -22,13 +24,13 @@ function bindEvents() {
     if (accountCreateBtn) {
         accountCreateBtn.addEventListener("click", handleAccountCreate);
     } else {
-        console.warn("❗ accountCreateBtn이 DOM에 없음");
+        console.warn("accountCreateBtn이 DOM에 없음");
     }
 
     if (myAccountToggleBtn) {
          myAccountToggleBtn.addEventListener("click", handleAccountList);
     } else {
-        console.warn("❗ myAccountToggleBtn이 DOM에 없음");
+        console.warn("myAccountToggleBtn이 DOM에 없음");
     }
 }
 
@@ -48,11 +50,16 @@ async function checkTokenBeforeEnteringBank() {
             return true;
         } else {
             handleApiFailure(res, parsed);
+            location.replace("/login");
+            return false;
         }
     } catch (err) {
         handleNetworkOrApiError(err);
+        location.replace("/login");
+        return false;
     }
 }
+
 async function handleAccountList() {
     location.href = "/bank/accounts";
 }
