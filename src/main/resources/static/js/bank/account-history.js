@@ -6,7 +6,9 @@ import { handleApiFailure } from "/js/lib/api/handleApiFailure.js";
 document.addEventListener("DOMContentLoaded", main);
 let historyList;
 
-function main() {
+async function main() {
+    const ok = await checkTokenBeforeEnteringBank();
+    if (!ok) return;
     initElement();
     bindEvents();
     accountHistory();
@@ -70,9 +72,32 @@ function bindDynamicButtonEvents() {
         }
     });
 }
+
 function formatKRW(value) {
   if (value == null) return "-";
   const n = typeof value === "string" ? Number(value) : value;
   if (!Number.isFinite(n)) return "-";
   return n.toLocaleString("ko-KR");
+}
+
+async function checkTokenBeforeEnteringBank() {
+    try {
+        const res = await fetchWithAuth("/api/auth/check", {
+            method: "GET",
+            credentials: "include"
+        })
+        const parsed = await fetchJsonSafe(res);
+
+        if (res.ok) {
+            return true;
+        } else {
+            handleApiFailure(res, parsed);
+            location.replace("/login");
+            return false;
+        }
+    } catch (err) {
+        handleNetworkOrApiError(err);
+        location.replace("/login");
+        return false;
+    }
 }
