@@ -62,19 +62,6 @@ public class AccountService {
         accountRepository.save(account);
     }
 
-    //리팩터링 할것
-    public List<AccountSummaryDto> getAccountSummariesByUserId(Long userId) {
-        Set<Account> accounts = accountRepository.findByOwner_Id(userId);
-
-        return accounts.stream()
-                .map(acc -> new AccountSummaryDto(
-                        acc.getBank(),
-                        acc.getAccountNumber(),
-                        acc.getBalance()
-                ))
-                .collect(Collectors.toList());
-    }
-
     @Transactional
     public void handleDepositWithdraw(TransferDto dto, Long userId) {
         TransferType type = dto.getType();
