@@ -6,7 +6,9 @@ import { handleNetworkOrApiError } from "/js/lib/network/handleNetworkOrApiError
 document.addEventListener("DOMContentLoaded", main);
 let depositWithdrawForm, amountInput, memoInput;
 
-function main() {
+async function main() {
+    const ok = await checkTokenBeforeEnteringBank();
+    if (!ok) return;
     initElement();
     bindEvents();
 }
@@ -34,7 +36,6 @@ async function handleDepositWithdrawSubmit(e) {
     const amount = amountInput.value;
     const memo = memoInput.value;
 
-    //deposit, withdraw 분리
     const url = type === "DEPOSIT"
         ? "/api/bank/deposit"
         : "/api/bank/withdraw"
@@ -61,5 +62,27 @@ async function handleDepositWithdrawSubmit(e) {
 
     } catch (err) {
         handleNetworkOrApiError(err);
+    }
+}
+
+async function checkTokenBeforeEnteringBank() {
+    try {
+        const res = await fetchWithAuth("/api/auth/check", {
+            method: "GET",
+            credentials: "include"
+        })
+        const parsed = await fetchJsonSafe(res);
+
+        if (res.ok) {
+            return true;
+        } else {
+            handleApiFailure(res, parsed);
+            location.replace("/login");
+            return false;
+        }
+    } catch (err) {
+        handleNetworkOrApiError(err);
+        location.replace("/login");
+        return false;
     }
 }
