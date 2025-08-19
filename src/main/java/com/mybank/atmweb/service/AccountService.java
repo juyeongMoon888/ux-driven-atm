@@ -1,6 +1,7 @@
 package com.mybank.atmweb.service;
 
 import com.mybank.atmweb.application.AccountQueryService;
+import com.mybank.atmweb.application.TransactionCommandService;
 import com.mybank.atmweb.application.TransactionQueryService;
 import com.mybank.atmweb.domain.*;
 import com.mybank.atmweb.domain.account.Account;
@@ -32,10 +33,9 @@ public class AccountService {
     private final PasswordEncoder passwordEncoder;
     private final AccountRepository accountRepository;
     private final UserRepository userRepository;
-    private final TransactionRepository transactionRepository;
     private final AccountNumberGenerator accountNumberGenerator;
     private final AccountQueryService accountQueryService;
-    private final TransactionQueryService transactionQueryService;
+    private final TransactionCommandService transactionCommandService;
 
     public void createAccount(Long userId, AccountOpenRequestDto dto) {
         BankType bankType;
@@ -95,15 +95,8 @@ public class AccountService {
         }
         long after = account.getBalance();
 
-        recordTransaction(account, before, after, dto);
+        transactionCommandService.recordTransaction(account, before, after, dto);
     }
 
-    private void recordTransaction(Account account,
-                                   Long balanceBefore,
-                                   Long balanceAfter,
-                                   TransferDto dto) {
-        Transaction tx = new Transaction(account, dto.getType(), dto.getAmount(), balanceBefore, balanceAfter, dto.getMemo());
 
-        transactionRepository.save(tx);
-    }
 }
