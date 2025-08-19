@@ -106,12 +106,4 @@ public class AccountService {
 
         transactionRepository.save(tx);
     }
-
-    @Transactional
-    public String updateTransactionMemo(Long transactionId, Long userId, MemoUpdateRequest memoRequest) {
-        String memo = memoRequest.getMemo();
-        Transaction tx = transactionQueryService.getTransactionOrThrow(transactionId, userId);
-        tx.setMemo(memo);
-        return tx.getAccount().getAccountNumber();
-    }
 }
