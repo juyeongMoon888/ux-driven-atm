@@ -45,10 +45,10 @@ public class PageController {
         return "bank/account-list";
     }
 
-    @GetMapping("/bank/transfer")
-    public String transfer(@RequestParam String accountNumber, Model model) {
+    @GetMapping("/bank/deposit-withdraw")
+    public String depositWithdraw(@RequestParam String accountNumber, Model model) {
         model.addAttribute("accountNumber", accountNumber);
-        return "bank/transfer";
+        return "bank/deposit-withdraw";
     }
 
     @GetMapping("/bank/account-history")
