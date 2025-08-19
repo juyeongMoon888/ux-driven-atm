@@ -1,12 +1,16 @@
 package com.mybank.atmweb.application;
 
 import com.mybank.atmweb.domain.account.Account;
+import com.mybank.atmweb.dto.AccountSummaryDto;
+import com.mybank.atmweb.dto.TransactionSummaryDto;
 import com.mybank.atmweb.global.code.ErrorCode;
 import com.mybank.atmweb.global.exception.user.CustomException;
 import com.mybank.atmweb.repository.AccountRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -17,5 +21,10 @@ public class AccountQueryService {
     public Account findAccountByAccountNumberAndUserId(String accountNumber, Long userId) {
         return accountRepository.findByAccountNumberAndOwner_Id(accountNumber, userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.ACCOUNT_NOT_FOUND_FOR_USER));
+    }
+
+    @Transactional
+    public List<AccountSummaryDto> getListByOwner_Id(Long userId) {
+        return accountRepository.findByOwner_Id(userId);
     }
 }
