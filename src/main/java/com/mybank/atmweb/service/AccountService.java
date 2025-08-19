@@ -65,6 +65,7 @@ public class AccountService {
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
     }
 
+    //리팩터링 할것
     public List<AccountSummaryDto> getAccountSummariesByUserId(Long userId) {
         Set<Account> accounts = accountRepository.findByOwner_Id(userId);
 
@@ -106,22 +107,8 @@ public class AccountService {
         transactionRepository.save(tx);
     }
 
-    public List<TransactionSummaryDto> getTransactionByAccountId(String accountNumber, Long userId) {
-        Set<Transaction> transactions = transactionRepository.findByAccount_AccountNumberAndAccount_Owner_IdOrderByCreatedAtDesc(accountNumber, userId);
-
-        return transactions.stream()
-                .map(tx -> new TransactionSummaryDto(
-                        tx.getId(),
-                        tx.getCreatedAt(),
-                        tx.getTransfer(),
-                        tx.getAmount(),
-                        tx.getMemo()
-                ))
-                .collect(Collectors.toList());
-    }
-
     public TransactionDetailSummaryDto getHistoryDetail(Long transactionId, Long userId) {
-        Transaction tx = transactionQueryService.getTransactionDetailOrThrow(transactionId, userId);
+        Transaction tx = transactionQueryService.getTransactionOrThrow(transactionId, userId);
 
         return new TransactionDetailSummaryDto(
                 tx.getCreatedAt(),
@@ -135,12 +122,8 @@ public class AccountService {
     @Transactional
     public String updateTransactionMemo(Long transactionId, Long userId, MemoUpdateRequest memoRequest) {
         String memo = memoRequest.getMemo();
-
-        Transaction tx = transactionRepository.findByIdAndAccount_Owner_Id(transactionId, userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.TRANSACTION_NOT_FOUND));
-
+        Transaction tx = transactionQueryService.getTransactionOrThrow(transactionId, userId);
         tx.setMemo(memo);
-
         return tx.getAccount().getAccountNumber();
     }
 }
