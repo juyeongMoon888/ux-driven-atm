@@ -107,7 +107,7 @@ public class AccountApiController {
             String token = jwtUtil.extractToken(request);
             Long userId = jwtUtil.getUserId(token);
 
-            TransactionDetailSummaryDto transactionDetail = accountService.getHistoryDetail(transactionId, userId);
+            TransactionDetailSummaryDto transactionDetail = transactionQueryService.getTransactionHistoryDetail(transactionId, userId);
 
             return responseUtil.buildResponse(SuccessCode.READ_SUCCESS, HttpStatus.OK, transactionDetail);
         } catch (JwtException | IllegalArgumentException e) {
