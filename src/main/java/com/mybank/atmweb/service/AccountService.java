@@ -3,6 +3,7 @@ package com.mybank.atmweb.service;
 import com.mybank.atmweb.application.AccountQueryService;
 import com.mybank.atmweb.application.TransactionCommandService;
 import com.mybank.atmweb.application.TransactionQueryService;
+import com.mybank.atmweb.application.UserQueryService;
 import com.mybank.atmweb.domain.*;
 import com.mybank.atmweb.domain.account.Account;
 import com.mybank.atmweb.domain.account.AccountNumberGenerator;
@@ -36,6 +37,7 @@ public class AccountService {
     private final AccountNumberGenerator accountNumberGenerator;
     private final AccountQueryService accountQueryService;
     private final TransactionCommandService transactionCommandService;
+    private final UserQueryService userQueryService;
 
     public void createAccount(Long userId, AccountOpenRequestDto dto) {
         BankType bankType;
@@ -46,7 +48,7 @@ public class AccountService {
             throw new CustomException(BANK_INVALID);
         }
 
-        User user = findUserByIdOrThrow(userId);
+        User user = userQueryService.getByIdOrThrow(userId);
 
         String accountNumber = accountNumberGenerator.generate(bankType.getPrefix());
         Account account = Account.builder()
@@ -58,11 +60,6 @@ public class AccountService {
                 .password(passwordEncoder.encode(dto.getPassword()))
                 .build();
         accountRepository.save(account);
-    }
-
-    public User findUserByIdOrThrow(Long id) {
-        return userRepository.findById(id)
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
     }
 
     //리팩터링 할것
