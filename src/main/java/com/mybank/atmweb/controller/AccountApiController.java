@@ -1,7 +1,9 @@
 package com.mybank.atmweb.controller;
 
+import com.mybank.atmweb.application.TransactionQueryService;
 import com.mybank.atmweb.auth.JwtUtil;
 import com.mybank.atmweb.dto.*;
+import com.mybank.atmweb.dto.account.request.AccountOpenRequestDto;
 import com.mybank.atmweb.external.dto.ExternalAccountVerifyResponse;
 import com.mybank.atmweb.global.ResponseUtil;
 import com.mybank.atmweb.global.code.ErrorCode;
@@ -31,9 +33,10 @@ public class AccountApiController {
     private final JwtUtil jwtUtil;
     private final ResponseUtil responseUtil;
     private final TransferService transferService;
+    private final TransactionQueryService transactionQueryService;
 
     @PostMapping("/open-account")
-    public ResponseEntity<?> openInternalAccount(@RequestBody AccountOepnRequestDto dto, HttpServletRequest request) {
+    public ResponseEntity<?> openInternalAccount(@RequestBody AccountOpenRequestDto dto, HttpServletRequest request) {
         String token = jwtUtil.extractToken(request);
         Long userId = jwtUtil.getUserId(token);
 
@@ -90,9 +93,9 @@ public class AccountApiController {
             String token = jwtUtil.extractToken(request);
             Long userId = jwtUtil.getUserId(token);
 
-            List<TransactionSummaryDto> transactionList = accountService.getTransactionByAccountId(accountNumber, userId);
+            List<TransactionSummaryDto> transactionHistory = transactionQueryService.getTransactionHistory(accountNumber, userId);
 
-            return responseUtil.buildResponse(SuccessCode.READ_SUCCESS, HttpStatus.OK, transactionList);
+            return responseUtil.buildResponse(SuccessCode.READ_SUCCESS, HttpStatus.OK, transactionHistory);
         } catch (JwtException | IllegalArgumentException e) {
             throw new CustomException(ErrorCode.TOKEN_INVALID);
         }
