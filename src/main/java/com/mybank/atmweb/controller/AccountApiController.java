@@ -3,19 +3,14 @@ package com.mybank.atmweb.controller;
 import com.mybank.atmweb.application.AccountQueryService;
 import com.mybank.atmweb.application.TransactionCommandService;
 import com.mybank.atmweb.application.TransactionQueryService;
-import com.mybank.atmweb.auth.JwtUtil;
 import com.mybank.atmweb.dto.*;
 import com.mybank.atmweb.dto.account.request.AccountOpenRequestDto;
 import com.mybank.atmweb.external.dto.ExternalAccountVerifyResponse;
 import com.mybank.atmweb.global.ResponseUtil;
-import com.mybank.atmweb.global.code.ErrorCode;
 import com.mybank.atmweb.global.code.SuccessCode;
-import com.mybank.atmweb.global.exception.user.CustomException;
 import com.mybank.atmweb.security.CustomUserDetails;
 import com.mybank.atmweb.service.AccountService;
 import com.mybank.atmweb.service.TransferService;
-import io.jsonwebtoken.JwtException;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +29,6 @@ import java.util.Map;
 public class AccountApiController {
 
     private final AccountService accountService;
-    private final JwtUtil jwtUtil;
     private final ResponseUtil responseUtil;
     private final TransferService transferService;
     private final TransactionQueryService transactionQueryService;
