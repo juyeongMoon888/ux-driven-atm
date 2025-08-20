@@ -5,7 +5,9 @@ import { handleApiFailure } from "/js/lib/api/handleApiFailure.js";
 document.addEventListener("DOMContentLoaded", main);
 let historyDetail, date, type, after, memoInput, saveBtn, transactionId;
 
-function main() {
+async function main() {
+    const ok = await checkTokenBeforeEnteringBank();
+    if (!ok) return;
     initElement();
     accountHistoryDetail();
     bindEvents();
@@ -86,5 +88,27 @@ async function saveTransactionMemo(e) {
         }
     } catch(err) {
         handleNetworkOrApiError(err);
+    }
+}
+
+async function checkTokenBeforeEnteringBank() {
+    try {
+        const res = await fetchWithAuth("/api/auth/check", {
+            method: "GET",
+            credentials: "include"
+        })
+        const parsed = await fetchJsonSafe(res);
+
+        if (res.ok) {
+            return true;
+        } else {
+            handleApiFailure(res, parsed);
+            location.replace("/login");
+            return false;
+        }
+    } catch (err) {
+        handleNetworkOrApiError(err);
+        location.replace("/login");
+        return false;
     }
 }
