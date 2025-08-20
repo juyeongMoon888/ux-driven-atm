@@ -62,4 +62,9 @@ public class PageController {
         model.addAttribute("transactionId", transactionId);
         return "bank/account-history-detail";
     }
+
+    @GetMapping("/bank/transfer")
+    public String getTransferForm(){
+        return "bank/transfer";
+    }
 }
