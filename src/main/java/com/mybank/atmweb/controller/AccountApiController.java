@@ -42,7 +42,7 @@ public class AccountApiController {
     private final AccountQueryService accountQueryService;
 
     @PostMapping("/open-account")
-    public ResponseEntity<?> openInternalAccount(@RequestBody AccountOpenRequestDto dto, HttpServletRequest request,
+    public ResponseEntity<?> openInternalAccount(@RequestBody AccountOpenRequestDto dto,
                                                  @AuthenticationPrincipal CustomUserDetails user) {
         Long userId = user.getId();
         accountService.createAccount(userId, dto);
@@ -50,15 +50,14 @@ public class AccountApiController {
     }
 
     @GetMapping("/account-list")
-    public ResponseEntity<?> accountList(HttpServletRequest request,
-                                         @AuthenticationPrincipal CustomUserDetails user) {
+    public ResponseEntity<?> accountList(@AuthenticationPrincipal CustomUserDetails user) {
         Long userId = user.getId();
         List<AccountSummaryDto> accountList = accountQueryService.getListByOwner_Id(userId);
         return responseUtil.buildResponse(SuccessCode.READ_SUCCESS, HttpStatus.OK, accountList);
     }
 
     @PostMapping("/deposit")
-    public ResponseEntity<?> deposit(@RequestBody TransferDto dto, HttpServletRequest request,
+    public ResponseEntity<?> deposit(@RequestBody TransferDto dto,
                                      @AuthenticationPrincipal CustomUserDetails user) {
         Long userId = user.getId();
         accountService.handleDepositWithdraw(dto, userId);
@@ -66,7 +65,7 @@ public class AccountApiController {
     }
 
     @PostMapping("/withdraw")
-    public ResponseEntity<?> withdraw(@RequestBody TransferDto dto, HttpServletRequest request,
+    public ResponseEntity<?> withdraw(@RequestBody TransferDto dto,
                                       @AuthenticationPrincipal CustomUserDetails user) {
         Long userId = user.getId();
         accountService.handleDepositWithdraw(dto, userId);
@@ -74,7 +73,7 @@ public class AccountApiController {
     }
 
     @GetMapping("/account-history")
-    public ResponseEntity<?> accountHistoryList(@RequestParam String accountNumber, HttpServletRequest request,
+    public ResponseEntity<?> accountHistoryList(@RequestParam String accountNumber,
                                                 @AuthenticationPrincipal CustomUserDetails user) {
         Long userId = user.getId();
         List<TransactionSummaryDto> transactionHistory = transactionQueryService.getTransactionHistory(accountNumber, userId);
@@ -82,10 +81,11 @@ public class AccountApiController {
     }
 
     @GetMapping("/account-history/{transactionId}")
-    public ResponseEntity<?> getHistoryDetailApi(@PathVariable Long transactionId, HttpServletRequest request,
+    public ResponseEntity<?> getHistoryDetailApi(@PathVariable Long transactionId,
                                                  @AuthenticationPrincipal CustomUserDetails user) {
         Long userId = user.getId();
         TransactionDetailSummaryDto transactionDetail = transactionQueryService.getTransactionHistoryDetail(transactionId, userId);
+        log.info("transactionDetail={}", transactionDetail.getTransfer());
         return responseUtil.buildResponse(SuccessCode.READ_SUCCESS, HttpStatus.OK, transactionDetail);
     }
 
@@ -93,7 +93,6 @@ public class AccountApiController {
     public ResponseEntity<?> updateTransactionMemo(
             @PathVariable Long transactionId,
             @RequestBody MemoUpdateRequest memoRequest,
-            HttpServletRequest request,
             @AuthenticationPrincipal CustomUserDetails user
     ) {
         Long userId = user.getId();
