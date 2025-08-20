@@ -7,7 +7,14 @@
 </head>
 <body>
 <h1>거래 내역 상세</h1>
-<div id="historyDetail" class="col-md-6" th:attr="data-transaction-id=${transactionId}"></div>
+<div id="historyDetail" class="col-md-6" th:attr="data-transaction-id=${transactionId}">
+    <p>거래시각: <span id="tx-date"></span></p>
+    <p>거래유형: <span id="tx-type"></span></p>
+    <p>거래 후 잔액: <span id="tx-after"></span>원</p>
+    <label for="tx-memo">메모:</label>
+    <input type="text" id="tx-memo" name="memo" placeholder="메모를 입력하세요">
+    <button id="btn-memo-save" type="button">확인</button>
+</div>
 <script type="module" src="/js/bank/account-history-detail.js"></script>
 </body>
 </html>
