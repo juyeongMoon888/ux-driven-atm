@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class TransactionCommandService {
-
     private final TransactionQueryService transactionQueryService;
     private final TransactionRepository transactionRepository;
 
@@ -29,8 +28,13 @@ public class TransactionCommandService {
                                    Long balanceBefore,
                                    Long balanceAfter,
                                    TransferDto dto) {
-        Transaction tx = new Transaction(account, dto.getType(), dto.getAmount(), balanceBefore, balanceAfter, dto.getMemo());
-
+        Transaction tx = new Transaction(
+                account,
+                dto.getType(),
+                dto.getAmount(),
+                balanceBefore,
+                balanceAfter,
+                dto.getMemo());
         transactionRepository.save(tx);
     }
 }
