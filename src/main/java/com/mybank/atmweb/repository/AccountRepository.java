@@ -1,13 +1,46 @@
 package com.mybank.atmweb.repository;
 
-import com.mybank.atmweb.domain.Account;
+import com.mybank.atmweb.domain.BankType;
+import com.mybank.atmweb.domain.account.Account;
+import com.mybank.atmweb.dto.AccountStatus;
+import com.mybank.atmweb.dto.AccountSummaryDto;
+import com.mybank.atmweb.dto.account.AccountOptionDto;
+import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
+import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 public interface AccountRepository extends JpaRepository<Account, Long> {
-    Set<Account> findByOwner_Id(Long userId);
+
+    @Query("""
+            select new com.mybank.atmweb.dto.AccountSummaryDto(
+                a.bank, a.accountNumber, a.balance
+            )
+            from Account a
+            where a.owner.id = :userId
+            """)
+    List<AccountSummaryDto> findSummariesByOwnerId(@Param("userId") Long userId);
 
     Optional<Account> findByAccountNumberAndOwner_Id(String accountNumber, Long userId);
+
+
+    @Query("""
+            select new com.mybank.atmweb.dto.account.AccountOptionDto(
+                a.bank, a.accountNumber
+            )
+            from Account a
+            where a.owner.id = :userId
+            """)
+    List<AccountOptionDto> findOptionsByOwnerId(@Param("userId") Long userId);
+
+    @Query("""
+           select a.status
+             from Account a
+            where a.bankType = :bank
+              and a.accountNumber = :accountNumber
+           """)
+    Optional<AccountStatus> findStatusByBankAndAccountNumber(@Param("bank") String bank,
+                                                             @Param("accountNumber") String accountNumber);
 }
