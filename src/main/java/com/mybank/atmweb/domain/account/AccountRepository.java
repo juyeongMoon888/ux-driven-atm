@@ -1,7 +1,5 @@
-package com.mybank.atmweb.repository;
+package com.mybank.atmweb.domain.account;
 
-import com.mybank.atmweb.domain.BankType;
-import com.mybank.atmweb.domain.account.Account;
 import com.mybank.atmweb.dto.AccountStatus;
 import com.mybank.atmweb.dto.AccountSummaryDto;
 import com.mybank.atmweb.dto.account.AccountOptionDto;
