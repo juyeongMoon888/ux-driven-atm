@@ -1,4 +1,4 @@
-package com.mybank.atmweb.application;
+package com.mybank.atmweb.application.query;
 
 import com.mybank.atmweb.domain.user.User;
 import com.mybank.atmweb.global.code.ErrorCode;
@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 public class UserQueryService {
     private final UserRepository userRepository;
 
+    @Transactional
     public User getByIdOrThrow(Long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
