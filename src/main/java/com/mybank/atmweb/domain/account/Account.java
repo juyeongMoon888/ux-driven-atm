@@ -1,7 +1,8 @@
 package com.mybank.atmweb.domain.account;
 
 import com.mybank.atmweb.domain.BankType;
-import com.mybank.atmweb.domain.User;
+import com.mybank.atmweb.domain.user.User;
+import com.mybank.atmweb.dto.AccountStatus;
 import jakarta.persistence.*;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
@@ -54,5 +55,9 @@ public class Account {
         }
         this.balance -= amount;
     }
+
+    @Enumerated(EnumType.STRING)
+    @Column(name="status")
+    private AccountStatus status;
 }
 
