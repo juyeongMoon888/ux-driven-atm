@@ -1,5 +1,6 @@
 package com.mybank.atmweb.application;
 
+import com.mybank.atmweb.application.query.TransactionQueryService;
 import com.mybank.atmweb.domain.account.Account;
 import com.mybank.atmweb.domain.transaction.Transaction;
 import com.mybank.atmweb.dto.MemoUpdateRequest;
