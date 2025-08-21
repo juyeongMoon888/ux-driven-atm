@@ -64,7 +64,8 @@ public class PageController {
     }
 
     @GetMapping("/bank/transfer")
-    public String getTransferForm(){
+    public String getTransferForm(Model model){
+        model.addAttribute("bankTypes", BankType.values());
         return "bank/transfer";
     }
 }
