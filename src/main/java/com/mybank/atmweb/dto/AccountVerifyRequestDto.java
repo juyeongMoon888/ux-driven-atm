@@ -1,0 +1,12 @@
+package com.mybank.atmweb.dto;
+
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
+@Getter
+@RequiredArgsConstructor
+public class ExternalAccountVerifyRequestDto {
+    private final String bank;
+    private final String accountNumber;
+}
+
