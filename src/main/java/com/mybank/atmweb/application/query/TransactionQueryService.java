@@ -1,4 +1,4 @@
-package com.mybank.atmweb.application;
+package com.mybank.atmweb.application.query;
 
 import com.mybank.atmweb.domain.transaction.Transaction;
 import com.mybank.atmweb.dto.TransactionDetailSummaryDto;
