@@ -1,24 +1,49 @@
+import { isBlank } from "/js/lib/validation/isBlank.js"
+
 export function validateUser(user) {
     console.log("정적 검사 작동 확인");
     const errors = {};
 
-    if (!user.loginId.trim()) errors.loginId = "NOTBLANK_LOGINID";
+    if ("loginId" in user && isBlank(user.loginId)) errors.loginId = "NOTBLANK_LOGINID";
 
-    if (!user.password.trim()) errors.password = "NOTBLANK_PASSWORD";
-    else if (user.password.length < 8) errors.password = "SIZE_PASSWORD";
+    if ("password" in user) {
+        if (isBlank(user.password)) {
+            errors.password = "NOTBLANK_PASSWORD";
+        } else if (user.password.length < 8) {
+            errors.password = "SIZE_PASSWORD";
+        }
+    }
 
-    if (!user.email.trim()) errors.email = "NOTBLANK_EMAIL";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(user.email)) errors.email = "EMAIL_EMAIL";
+    if ("email" in user) {
+        if (isBlank(user.email)) {
+            errors.email = "NOTBLANK_EMAIL";
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(user.email)) {
+            errors.email = "EMAIL_EMAIL";
+        }
+    }
 
-    if (!user.name.trim()) errors.name = "NOTBLANK_NAME";
+    if ("name" in user && isBlank(user.name)) errors.name = "NOTBLANK_NAME";
 
-    if (!user.residentNumber.trim()) errors.residentNumber = "NOTBLANK_RESIDENTNUMBER";
-    else if (!/^\d{13}$/.test(user.residentNumber)) errors.residentNumber = "SIZE_RESIDENTNUMBER";
+    if ("residentNumber" in user) {
+        if (isBlank(user.residentNumber)) {
+            errors.residentNumber = "NOTBLANK_RESIDENTNUMBER";
+        } else if (!/^\d{13}$/.test(user.residentNumber)) {
+            errors.residentNumber = "SIZE_RESIDENTNUMBER";
+        }
+    }
 
-    if (!user.gender.trim()) errors.gender = "NOTBLANK_GENDER";
+    if ("gender" in user && isBlank(user.gender)) errors.gender = "NOTBLANK_GENDER";
 
-    if (!user.phoneNumber.trim()) errors.phoneNumber = "NOTBLANK_PHONENUMBER";
-    else if (!/^\d{10,11}$/.test(user.phoneNumber)) errors.phoneNumber = "PATTERN_PHONENUMBER";
+    if ("phoneNumber" in user) {
+        if (isBlank(user.phoneNumber)) {
+            errors.phoneNumber = "NOTBLANK_PHONENUMBER";
+        } else if (!/^\d{10,11}$/.test(user.phoneNumber)) {
+            errors.phoneNumber = "PATTERN_PHONENUMBER";
+        }
+    }
+
+    if ("bankType" in user && isBlank(user.bankType)) errors.bankType = "은행을 선택하세요";
+    if ("toAccountNumber" in user && isBlank(user.toAccountNumber)) errors.toAccountNumber = "계좌번호를 입력하세요";
 
     return Object.keys(errors).length > 0 ? errors : null;
 }
