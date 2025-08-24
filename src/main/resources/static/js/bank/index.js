@@ -5,7 +5,7 @@ import { handleNetworkOrApiError } from "/js/lib/network/handleNetworkOrApiError
 import { getAccessToken } from "/js/lib/storage/getAccessToken.js"
 
 document.addEventListener("DOMContentLoaded", main);
-let accountCreateBtn, bankPage, myAccountToggleBtn;
+let accountCreateBtn, bankPage, myAccountToggleBtn, transferBtn;
 
 async function main() {
     const ok = await checkTokenBeforeEnteringBank();
@@ -18,6 +18,7 @@ function initElement() {
     bankPage = document.getElementById("bankPage");
     accountCreateBtn = document.getElementById("accountCreateBtn");
     myAccountToggleBtn = document.getElementById("myAccountToggleBtn");
+    transferBtn = document.getElementById("transferBtn");
 }
 
 function bindEvents() {
@@ -32,10 +33,24 @@ function bindEvents() {
     } else {
         console.warn("myAccountToggleBtn이 DOM에 없음");
     }
+
+    if (transferBtn) {
+        transferBtn.addEventListener("click", handleAccountTransfer);
+    } else {
+        console.warn("transferBtn이 DOM에 없음");
+    }
 }
 
 async function handleAccountCreate() {
     location.href = "/bank/open-account";
+}
+
+async function handleAccountList() {
+    location.href = "/bank/accounts";
+}
+
+async function handleAccountTransfer() {
+    location.href = "/bank/transfer";
 }
 
 async function checkTokenBeforeEnteringBank() {
@@ -58,8 +73,4 @@ async function checkTokenBeforeEnteringBank() {
         location.replace("/login");
         return false;
     }
-}
-
-async function handleAccountList() {
-    location.href = "/bank/accounts";
 }
