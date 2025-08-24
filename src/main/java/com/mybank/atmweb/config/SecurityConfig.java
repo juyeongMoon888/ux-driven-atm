@@ -58,7 +58,7 @@ public class SecurityConfig {
                                 new MyEntryPoint("/auth/refresh-redirect"),
                                 r -> {
                                     String p = r.getServletPath();
-                                    return p.equals("/bank") || p.startsWith("/bank/");
+                                    return p != null && (p.equals("/bank") || p.startsWith("/bank/"));
                                 }
                         )
                         .defaultAuthenticationEntryPointFor(
