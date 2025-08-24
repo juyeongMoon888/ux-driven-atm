@@ -16,6 +16,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -58,14 +60,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 "/api/users/check-id",
                 "/api/auth/login",
                 "/api/auth/token/refresh",
+                "/auth/refresh-redirect",
                 "/api/auth/logout",
                 "/api/auth/check",
-                "/bank",
-                "/bank/open-account",
-                "/bank/accounts",
-                "/bank/deposit-withdraw",
-                "/bank/account-history",
-                "/bank/account-history/**",
                 "/actuator/**"
         );
         if (whitelist.contains(path) ||
@@ -86,7 +83,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // 1. 쿠키 검사
         token = jwtUtil.extractToken(request);
-        System.out.println("🔥token = " + token);
+        log.info("🥠 token = {}", token);
         //3. token 유효성 검사
         if (token == null || token.isBlank()) {
             String authHeader = request.getHeader("Authorization");
@@ -96,55 +93,50 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
         if (token == null || token.isBlank()) {
             log.warn("❌ [JwtFilter] token is null or blank → 인증 실패 처리 시작");
-            request.setAttribute("tokenDebug", "token null or blank");
-            responseUtil.writeHttpErrorResponse(response, ErrorCode.AUTH_HEADER_INVALID);
+            SecurityContextHolder.clearContext();
+            filterChain.doFilter(request, response);
             return;
         }
 
         if (token != null) {
-
-            System.out.println("token = " + token);
             try {
+                //토큰 파싱
                 String loginId = jwtUtil.getLoginIdFromToken(token);
-                System.out.println("토큰 유지된다면 loginId="+ loginId);
                 Long userId = jwtUtil.getUserId(token);
-                System.out.println("토큰 유지된다면 userId="+ userId);
 
-
+                //블랙리스트 차단 -> 인증 실패로 던짐 (로그아웃된 유저)
                 if (tokenBlacklistService.isBlacklisted(token)) {
-                    responseUtil.writeHttpErrorResponse(response, ErrorCode.TOKEN_BLACKLISTED);
+                    SecurityContextHolder.clearContext();
+                    filterChain.doFilter(request, response);
                     return;
                 }
 
+                //로그아웃/토큰 미스매치 -> 인증 실패로 던짐
                 String redisToken = redisTemplate.opsForValue().get(ACCESS_TOKEN_PREFIX + userId);
-                System.out.println("redisToken = " + redisToken);
                 if (redisToken == null || !redisToken.equals(token)) {
-                    System.out.println("!redisToken.equals(token)="+token);
-                    responseUtil.writeHttpErrorResponse(response, ErrorCode.TOKEN_LOGGED_OUT);
+                    SecurityContextHolder.clearContext();
+                    filterChain.doFilter(request, response);
                     return;
                 }
-
+                // 인증 성공 컨텍스트 설정
                 UserDetails userDetails = userDetailsService.loadUserByUsername(loginId);
-                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-                jwtUtil.validateToken(token);
-                token = jwtUtil.extractToken(request);
-                request.setAttribute("accessTokenPresent", token != null);
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                 SecurityContextHolder.getContext().setAuthentication(authentication);
 
             } catch (ExpiredJwtException e) {
-                System.out.println("ExpiredJwtException e 예외");
-                responseUtil.writeHttpErrorResponse(response, ErrorCode.TOKEN_EXPIRED);
+                // 만료 → 인증 실패로 던짐 (EntryPoint가 처리)
+                SecurityContextHolder.clearContext();
+                filterChain.doFilter(request, response);
                 return;
-            }
-
-            catch (JwtException e) {
-                System.out.println("JwtException e 예외");
-                responseUtil.writeHttpErrorResponse(response, ErrorCode.TOKEN_INVALID);
+            } catch (JwtException e) {
+                // 위조/서명오류 등 → 인증 실패로 던짐
+                SecurityContextHolder.clearContext();
+                filterChain.doFilter(request, response);
                 return;
-            }
-            catch (Exception e) {
-                log.warn("🔴 [기타 JWT 오류] {}", e.getMessage());
-                responseUtil.writeHttpErrorResponse(response, ErrorCode.TOKEN_INVALID);
+            } catch (Exception e) {
+                SecurityContextHolder.clearContext();
+                filterChain.doFilter(request, response);
                 return;
             }
         }
