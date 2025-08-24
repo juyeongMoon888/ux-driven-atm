@@ -42,7 +42,7 @@ export function validateUser(user) {
         }
     }
 
-    if ("bankType" in user && isBlank(user.bankType)) errors.bankType = "은행을 선택하세요";
+    if ("bank" in user && isBlank(user.bank)) errors.bank = "은행을 선택하세요";
     if ("toAccountNumber" in user && isBlank(user.toAccountNumber)) errors.toAccountNumber = "계좌번호를 입력하세요";
 
     return Object.keys(errors).length > 0 ? errors : null;
