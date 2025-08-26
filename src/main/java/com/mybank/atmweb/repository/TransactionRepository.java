@@ -1,6 +1,6 @@
 package com.mybank.atmweb.repository;
 
-import com.mybank.atmweb.domain.transaction.Transaction;
+import com.mybank.atmweb.domain.transaction.Transactions;
 import com.mybank.atmweb.dto.TransactionDetailSummaryDto;
 import com.mybank.atmweb.dto.TransactionSummaryDto;
 import io.lettuce.core.dynamic.annotation.Param;
@@ -10,18 +10,17 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 @Repository
-public interface TransactionRepository extends JpaRepository<Transaction, Long> {
+public interface TransactionRepository extends JpaRepository<Transactions, Long> {
 
-    Optional<Transaction> findByIdAndAccount_Owner_Id(Long transactionId, Long userId);
+    Optional<Transactions> findByIdAndAccount_Owner_Id(Long transactionId, Long userId);
 
     @Query("""
             select new com.mybank.atmweb.dto.TransactionSummaryDto(
-                t.id, t.createdAt, t.transfer, t.amount, t.memo
+                t.id, t.createdAt, t.operationType, t.amount, t.memo
             )
-            from Transaction t
+            from Transactions t
             where t.account.accountNumber = :accountNumber
             and t.account.owner.id = :userId
             order by t.createdAt desc
@@ -33,9 +32,9 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 
     @Query("""
             select new com.mybank.atmweb.dto.TransactionDetailSummaryDto(
-                t.createdAt, t.transfer, t.amount, t.balanceAfter, t.memo
+                t.createdAt, t.operationType, t.amount, t.balanceAfter, t.memo
             )
-            from Transaction t
+            from Transactions t
             where t.id = :transactionId
             and t.account.owner.id = :userId
             """)
