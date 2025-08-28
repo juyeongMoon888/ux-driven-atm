@@ -5,11 +5,12 @@ import com.mybank.atmweb.application.query.AccountQueryService;
 import com.mybank.atmweb.application.query.TransactionQueryService;
 import com.mybank.atmweb.domain.BankType;
 import com.mybank.atmweb.domain.account.AccountRepository;
-import com.mybank.atmweb.domain.transaction.Transaction;
+import com.mybank.atmweb.domain.transaction.Transactions;
 import com.mybank.atmweb.domain.user.User;
 import com.mybank.atmweb.dto.*;
 import com.mybank.atmweb.external.client.ExternalBankClient;
 import com.mybank.atmweb.global.code.ErrorCode;
+import com.mybank.atmweb.global.code.SuccessCode;
 import com.mybank.atmweb.global.exception.user.CustomException;
 import com.mybank.atmweb.repository.UserRepository;
 import com.mybank.atmweb.service.AccountService;
@@ -25,9 +26,7 @@ public class InternalTransferExecutor implements TransferExecutor {
     private final TransactionCommandService transactionCommandService;
     private final AccountService accountService;
     private final ExternalBankClient externalBankClient;
-    private final AccountQueryService accountQueryService;
     private final UserRepository userRepository;
-    private final AccountRepository accountRepository;
     private final TransactionQueryService transactionQueryService;
 
     @Override
@@ -36,22 +35,31 @@ public class InternalTransferExecutor implements TransferExecutor {
     }
 
     @Override
-    public void execute(OperationContext ctx) {
+    public OperationSummary execute(OperationContext ctx) {
         OperationType operationType = ctx.getOperationType();
-        switch (operationType) {
-            case DEPOSIT ->
-                    accountService.deposit(ctx.getToAccountNumber(), ctx.getAmount(), ctx.getMemo(), ctx.getUserId());
-            case WITHDRAW ->
-                    accountService.withdraw(ctx.getFromAccountNumber(), ctx.getAmount(), ctx.getMemo(), ctx.getUserId());
-            case TRANSFER -> handleTransfer(ctx);
-        }
+        return switch (operationType) {
+            case DEPOSIT -> {
+                accountService.deposit(ctx.getToAccountNumber(), ctx.getAmount(), ctx.getMemo(), ctx.getUserId());
+                yield new OperationSummary(SuccessCode.DEPOSIT_OK.name(), SuccessCode.DEPOSIT_OK.getMessageKey());
+            }
+            case WITHDRAW -> {
+                accountService.withdraw(ctx.getFromAccountNumber(), ctx.getAmount(), ctx.getMemo(), ctx.getUserId());
+                yield new OperationSummary(SuccessCode.WITHDRAW_OK.name(), SuccessCode.WITHDRAW_OK.getMessageKey());
+            }
+            case TRANSFER -> {
+                OperationSummary res = handleTransfer(ctx);
+                yield new OperationSummary(res.getCode(), res.getMessage());
+            }
+        };
     }
 
     private OperationSummary handleTransfer(OperationContext ctx) {
+        OperationSummary summary;
         if (ctx.getToBank().equals("MYBANK")) {
             // 내부->내부 은행 송금
             accountService.transferInternal(ctx.getFromAccountNumber(), ctx.getUserId(),
                                             ctx.getToAccountNumber(), ctx.getAmount(), ctx.getMemo());
+            summary = new OperationSummary(SuccessCode.TRANSFER_OK.name(), SuccessCode.TRANSFER_OK.getMessageKey());
         } else {
             Long txId = transactionCommandService.createPendingWithdraw(ctx);
 
@@ -75,15 +83,15 @@ public class InternalTransferExecutor implements TransferExecutor {
             User user = userRepository.findById(data.getUserId())
                     .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
-            //Transaction 조회
-            Transaction tx = transactionQueryService.getTransactionOrThrow(data.getTxId(), user.getId());
+            //Transactions 조회
+            Transactions tx = transactionQueryService.getTransactionOrThrow(data.getTxId(), user.getId());
 
             //transaction 영속화
-            transactionCommandService.save(Transaction.builder().
-                    transactionStatus(data.getStatus())
+            transactionCommandService.save(Transactions.builder().
+                    transactionStatus(TransactionStatus.COMPLETED)
                     .build());
-
-            return new OperationSummary(res.getCode(), res.getMessage());
+            summary = new OperationSummary(res.getCode(), res.getMessage());
         }
+        return summary;
     }
 }

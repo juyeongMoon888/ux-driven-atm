@@ -119,11 +119,12 @@ async function handleExternalTransfer(e) {
     try {
         let res, parsed
         const fromAccountNumber = fromAccountSelectEl.value;
-        const bank = bankSelectEl.value;
+        const toBank = bankSelectEl.value;
         const toAccountNumber = toAccountNumberEl.value;
         const amount = amountEl.value;
         const memo = memoEl.value;
-        const payload = { fromAccountNumber, bank, toAccountNumber, amount, memo };
+        const payload = { fromAccountNumber, toBank, toAccountNumber, amount, memo };
+        const idempotencyKey = crypto.randomUUID();
 
         res = await fetchWithAuth("/api/bank/transfer", {
             method: "POST",
@@ -131,11 +132,13 @@ async function handleExternalTransfer(e) {
               "Content-Type": "application/json"
             },
             credentials: "include",
-            body: JSON.stringify(payload )
+            Idempotency-Key: idempotencyKey,
+            body: JSON.stringify( payload )
         });
         parsed = await fetchJsonSafe(res);
 
         if (res.ok) {
+            alert("이체가 완료되었습니다.")
             location.href = "/bank/accounts";
             return true;
         } else {
