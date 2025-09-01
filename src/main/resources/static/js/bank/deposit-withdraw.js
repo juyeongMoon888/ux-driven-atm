@@ -35,6 +35,7 @@ async function handleDepositWithdrawSubmit(e) {
     const accountNumber = depositWithdrawForm.dataset.accountNumber;
     const amount = amountInput.value;
     const memo = memoInput.value;
+    const idempotencyKey = crypto.randomUUID();
 
     const url = type === "DEPOSIT"
         ? "/api/bank/deposit"
@@ -47,6 +48,7 @@ async function handleDepositWithdrawSubmit(e) {
               "Content-Type": "application/json"
             },
             credentials: "include",
+            Idempotency-Key: idempotencyKey,
             body: JSON.stringify({
                 type, accountNumber, amount, memo
             })
