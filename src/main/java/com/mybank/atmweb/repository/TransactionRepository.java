@@ -3,6 +3,7 @@ package com.mybank.atmweb.repository;
 import com.mybank.atmweb.domain.transaction.Transactions;
 import com.mybank.atmweb.dto.TransactionDetailSummaryDto;
 import com.mybank.atmweb.dto.TransactionSummaryDto;
+import com.mybank.atmweb.service.transfer.model.OperationType;
 import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -42,4 +43,12 @@ public interface TransactionRepository extends JpaRepository<Transactions, Long>
             @Param("transactionId") Long transactionId,
             @Param("userId") Long userId
     );
+
+    Optional<Transactions> findByIdForUpdate(Long txId);
+
+    Optional<Transactions> findMasterByIdempotencyKey(String idempotencyKey);
+
+    boolean existsByIdempotencyAndOperationType(String idempotencyKey, OperationType operationType);
+
+    Optional<Transactions> findByIdempotencyKey(String idempotencyKey);
 }
