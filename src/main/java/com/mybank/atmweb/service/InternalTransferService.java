@@ -18,6 +18,8 @@ import com.mybank.atmweb.service.transfer.model.OperationType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class InternalTransferService {
@@ -27,6 +29,7 @@ public class InternalTransferService {
     private final AccountRepository accountRepo;
 
     public OperationSummary transferInternal(OperationContext ctx) {
+        // 멱등성
         if (idemRepo.existByKey(ctx.getIdempotencyKey())) {
             Transactions existing = txRepo.findMasterByIdempotencyKey(ctx.getIdempotencyKey())
                     .orElseThrow(() -> new CustomException(ErrorCode.IDEMPOTENCY_KEY_NOT_FOUND));
@@ -34,11 +37,11 @@ public class InternalTransferService {
             TransactionStatus.COMPLETED, existing.getId());
         }
 
+        // Id 기준으로 순서 매기기
         long fromId = accountRepo.findIdByAccountNumber(ctx.getFromAccountNumber())
                 .orElseThrow(() -> new CustomException(ErrorCode.ACCOUNT_NOT_FOUND));
         long toId = accountRepo.findIdByAccountNumber(ctx.getToAccountNumber())
                 .orElseThrow(() -> new CustomException(ErrorCode.ACCOUNT_NOT_FOUND));
-
         long firstId = Math.min(fromId, toId);
         long secondId = Math.max(fromId, toId);
 
@@ -49,8 +52,8 @@ public class InternalTransferService {
                 .orElseThrow(() -> new CustomException(ErrorCode.ACCOUNT_NOT_FOUND));
 
         // 의미 매핑
-        Account from = first.getAccountName().equals(ctx.getFromAccountNumber()) ? first : second;
-        Account to = from == first ? second : from;
+        Account from = first.getAccountNumber().equals(ctx.getFromAccountNumber()) ? first : second;
+        Account to = from == first ? second : first;
 
         // 검증 1 - 로직
         validateSameBankMybank(from, to);
@@ -70,9 +73,21 @@ public class InternalTransferService {
         from.withdraw(ctx.getAmount());
         to.deposit(ctx.getAmount());
 
-
-        Transactions tx = txRepo.save(
+        Transactions master = txRepo.save(
                 Transactions.builder()
+                        .operationType(OperationType.TRANSFER)
+                        .fromAccountNumber(ctx.getFromAccountNumber())
+                        .toAccountNumber(ctx.getToAccountNumber())
+                        .amount(ctx.getAmount())
+                        .memo(ctx.getMemo())
+                        .transactionStatus(TransactionStatus.COMPLETED)
+                        .idempotencyKey(ctx.getIdempotencyKey())
+                        .build()
+        );
+
+        txRepo.saveAll(List.of(
+                Transactions.builder()
+                        .parent(master)
                         .account(from)
                         .operationType(OperationType.WITHDRAW)
                         .amount(ctx.getAmount())
@@ -85,12 +100,31 @@ public class InternalTransferService {
                         .toAccountNumber(ctx.getToAccountNumber())
                         .transactionStatus(TransactionStatus.COMPLETED)
                         .idempotencyKey(ctx.getIdempotencyKey())
+                        .build(),
+                Transactions.builder()
+                        .parent(master)
+                        .account(to)
+                        .operationType(OperationType.DEPOSIT)
+                        .amount(ctx.getAmount())
+                        .balanceBefore(toBefore)
+                        .balanceAfter(to.getBalance())
+                        .memo(ctx.getMemo())
+                        .fromBank(BankType.valueOf(ctx.getFromBank()))
+                        .toBank(ctx.getToBank())
+                        .fromAccountNumber(ctx.getFromAccountNumber())
+                        .toAccountNumber(ctx.getToAccountNumber())
+                        .transactionStatus(TransactionStatus.COMPLETED)
+                        .idempotencyKey(ctx.getIdempotencyKey())
                         .build()
-        );
+        ));
 
-        idemRepo.save(new Idempotency(ctx.getIdempotencyKey(), tx.getId(), tx.getCreatedAt()));
+        idemRepo.save(new Idempotency(master.getIdempotencyKey(), master.getId(), master.getCreatedAt()));
 
-        return new OperationSummary(SuccessCode.TRANSFER_OK.name(), SuccessCode.TRANSFER_OK.getMessageKey(), TransactionStatus.COMPLETED, ctx.getUserId());
+        return new OperationSummary(
+                SuccessCode.TRANSFER_OK.name(),
+                SuccessCode.TRANSFER_OK.getMessageKey(),
+                TransactionStatus.COMPLETED,
+                ctx.getUserId());
     }
 
     private void validateSameBankMybank(Account from, Account to) {
