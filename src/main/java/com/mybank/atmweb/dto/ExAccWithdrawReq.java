@@ -15,18 +15,16 @@ public class ExAccWithdrawReq {
     private String toAccountNumber;
     private Long amount;
     private String memo;
-    private Long exTxId;
     private String idempotencyKey;
     private String fromBank;
     private String fromAccountNumber;
 
-    public static ExAccWithdrawReq fromTransfer(OperationContext ctx, Long exTxId) {
+    public static ExAccWithdrawReq fromTransfer(OperationContext ctx) {
         return ExAccWithdrawReq.builder()
                 .toBank(ctx.getToBank())
                 .toAccountNumber(ctx.getToAccountNumber())
                 .amount(ctx.getAmount())
                 .memo(ctx.getMemo())
-                .exTxId(exTxId)
                 .idempotencyKey(ctx.getIdempotencyKey())
                 .fromBank(ctx.getFromBank())
                 .fromAccountNumber(ctx.getFromAccountNumber())
