@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public class OperationContext {
-    private final OperationType operationType;
     private final Long userId;
     private final String fromAccountNumber; // WITHDRAW/TRANSFER 에서 사용
     private final String toAccountNumber; // DEPOSIT/TRANSFER 에서 사용
