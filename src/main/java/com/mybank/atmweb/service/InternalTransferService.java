@@ -30,9 +30,10 @@ public class InternalTransferService {
 
     public OperationSummary transferInternal(OperationContext ctx) {
         // 멱등성
-        if (idemRepo.existByKey(ctx.getIdempotencyKey())) {
-            Transactions existing = txRepo.findMasterByIdempotencyKey(ctx.getIdempotencyKey())
+        if (idemRepo.existsByKey(ctx.getIdempotencyKey())) {
+            Transactions existing = txRepo.findMasterByIdempotencyKeyAndOperationType(ctx.getIdempotencyKey(), ctx.getOperationType())
                     .orElseThrow(() -> new CustomException(ErrorCode.IDEMPOTENCY_KEY_NOT_FOUND));
+
             return new OperationSummary(SuccessCode.TRANSFER_OK.name(), SuccessCode.TRANSFER_OK.getMessageKey(),
             TransactionStatus.COMPLETED, existing.getId());
         }
@@ -75,12 +76,13 @@ public class InternalTransferService {
 
         Transactions master = txRepo.save(
                 Transactions.builder()
+                        .master(true)
                         .operationType(OperationType.TRANSFER)
                         .fromAccountNumber(ctx.getFromAccountNumber())
                         .toAccountNumber(ctx.getToAccountNumber())
                         .amount(ctx.getAmount())
                         .memo(ctx.getMemo())
-                        .transactionStatus(TransactionStatus.COMPLETED)
+                        .transactionStatus(TransactionStatus.PENDING_WITHDRAW)
                         .idempotencyKey(ctx.getIdempotencyKey())
                         .build()
         );
@@ -99,7 +101,6 @@ public class InternalTransferService {
                         .fromAccountNumber(ctx.getFromAccountNumber())
                         .toAccountNumber(ctx.getToAccountNumber())
                         .transactionStatus(TransactionStatus.COMPLETED)
-                        .idempotencyKey(ctx.getIdempotencyKey())
                         .build(),
                 Transactions.builder()
                         .parent(master)
@@ -114,10 +115,12 @@ public class InternalTransferService {
                         .fromAccountNumber(ctx.getFromAccountNumber())
                         .toAccountNumber(ctx.getToAccountNumber())
                         .transactionStatus(TransactionStatus.COMPLETED)
-                        .idempotencyKey(ctx.getIdempotencyKey())
                         .build()
         ));
 
+        // 마스터 확정
+        master.setTransactionStatus(TransactionStatus.COMPLETED);
+        txRepo.save(master);
         idemRepo.save(new Idempotency(master.getIdempotencyKey(), master.getId(), master.getCreatedAt()));
 
         return new OperationSummary(
