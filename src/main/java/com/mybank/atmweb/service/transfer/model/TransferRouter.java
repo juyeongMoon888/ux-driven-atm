@@ -35,7 +35,6 @@ public class TransferRouter {
 
         // 컨텍스트 구성 (멱등키 생성)
         OperationContext ctx = OperationContext.builder()
-                .operationType(OperationType.TRANSFER)
                 .fromBank(fromBank)
                 .fromAccountNumber(dto.getFromAccountNumber())
                 .toBank(toBank)
@@ -58,10 +57,9 @@ public class TransferRouter {
         };
     }
 
-    //deposit 전용 내/외부
+    //단순 deposit 전용 내/외부
     public OperationSummary routeAndExecute(DepositRequestDto dto, long userId, String idempotencyKey) {
         OperationContext ctx = OperationContext.builder()
-                .operationType(OperationType.DEPOSIT)
                 .userId(userId)
                 .toAccountNumber(dto.getAccountNumber())
                 .toBank(dto.getBank())
@@ -77,10 +75,9 @@ public class TransferRouter {
             case EXTERNAL -> externalDAWService.externalDeposit(ctx);
         };
     }
-    //withdraw 전용 내/외부
+    //단순 withdraw 전용 내/외부
     public OperationSummary routeAndExecute(WithdrawRequestDto dto, long userId, String idempotencyKey) {
         OperationContext ctx = OperationContext.builder()
-                .operationType(OperationType.WITHDRAW)
                 .userId(userId)
                 .fromAccountNumber(dto.getAccountNumber())
                 .fromBank(dto.getBank())
@@ -96,7 +93,6 @@ public class TransferRouter {
             case EXTERNAL -> externalDAWService.externalWithdraw(ctx);
         };
     }
-
 
     private FlowType decideFlow(String fromBank, String toBank) {
         boolean fromMy = "MYBANK".equals(fromBank);
