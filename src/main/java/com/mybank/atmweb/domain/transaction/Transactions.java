@@ -1,7 +1,6 @@
 package com.mybank.atmweb.domain.transaction;
 
 import com.mybank.atmweb.domain.BankType;
-import com.mybank.atmweb.domain.TransferType;
 import com.mybank.atmweb.domain.account.Account;
 import com.mybank.atmweb.dto.TransactionStatus;
 import com.mybank.atmweb.service.transfer.model.OperationType;
@@ -14,9 +13,9 @@ import java.time.LocalDateTime;
 
 @Entity
 @EntityListeners(AuditingEntityListener.class)
-@Getter
+@Getter @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Transaction {
+public class Transactions {
 
     @Id
     @GeneratedValue
@@ -37,10 +36,11 @@ public class Transaction {
     private String toBank;
 
     @Builder
-    public Transaction(Account account, OperationType operationType, Long amount,
-                       Long balanceBefore, Long balanceAfter, String memo, BankType fromBank,
-                       String toBank, String fromAccountNumber, String toAccountNumber,
-                       TransactionStatus transactionStatus) {
+    public Transactions(Account account, OperationType operationType, Long amount,
+                        Long balanceBefore, Long balanceAfter, String memo, BankType fromBank,
+                        String toBank, String fromAccountNumber, String toAccountNumber,
+                        TransactionStatus transactionStatus, String idempotencyKey,
+                        boolean master, Transactions parent, String failureCode) {
         this.account = account;
         this.operationType = operationType;
         this.amount = amount;
@@ -52,6 +52,10 @@ public class Transaction {
         this.fromAccountNumber = fromAccountNumber;
         this.toAccountNumber = toAccountNumber;
         this.transactionStatus = transactionStatus;
+        this.idempotencyKey = idempotencyKey;
+        this.master = master;
+        this.parent = parent;
+        this.failureCode = failureCode;
     }
 
     private Long balanceBefore;
@@ -59,7 +63,6 @@ public class Transaction {
 
     private String fromAccountNumber;
     private String toAccountNumber;
-
 
     @Enumerated(EnumType.STRING)
     @Column(name = "operation_type", nullable = false, length = 20)
@@ -73,7 +76,14 @@ public class Transaction {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    private String idempotencyKey;
+
+    private boolean master;
+    private Transactions parent;
+    private String failureCode;
+
     public void setMemo(String memo) {
         this.memo = memo;
     }
+
 }
