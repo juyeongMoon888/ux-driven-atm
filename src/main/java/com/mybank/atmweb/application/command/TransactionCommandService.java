@@ -185,7 +185,7 @@ public class TransactionCommandService {
                 errorCode));
     }
 
-    public void markInboundPendingConfirm(Long txId) {
+    public void markAwaitingExternalConfirm(Long txId) {
 
     }
 
