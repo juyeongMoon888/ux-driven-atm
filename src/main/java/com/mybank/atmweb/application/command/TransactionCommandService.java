@@ -114,7 +114,7 @@ public class TransactionCommandService {
         //실제 입금
         to.deposit(ctx.getAmount());
 
-        //leg 생성/저장
+        //leg 생성/저장 COMPLETE
         Transactions depositLeg = Transactions.builder()
                 .parent(newMaster)
                 .account(to)
