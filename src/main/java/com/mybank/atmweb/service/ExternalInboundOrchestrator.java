@@ -63,15 +63,18 @@ public class ExternalInboundOrchestrator {
             return summarizeExisting(ctx);
         }
 
-        // 3) 외부 confirm - 외부 confirm은 출금 레그 확정만, 마스터 전이는 MyBank
-        ExAccConfirmRes cres = externalBankClient.confirm(new ExAccConfirmReq(ctx.getFromBank(), exTxId));
-        if (!cres.isComplete()) {
+        try {
+            //3) 외부 confirm
+            ExAccConfirmRes cres = externalBankClient.confirm(new ExAccConfirmReq(ctx.getFromBank(), exTxId));
+            //4) 내부 confirm - 마스터 complete
+            txCmd.markInboundConfirmedMaster(txId);
+        } catch (Exception ex) { //도메인 오류
             txCmd.markAwaitingExternalConfirm(txId, "CONFIRM_UNREACHABLE");
-            return new OperationSummary("PENDING_CONFIRM", "external.confirm.pending", TransactionStatus.PENDING_CONFIRM, txId);
+            return new OperationSummary("PENDING_CONFIRM",
+                    "external.confirm.pending",
+                    TransactionStatus.PENDING_CONFIRM,
+                    txId);
         }
-
-        // 4) 우리 내부 confirm  마스터, leg 반영
-        txCmd.markInboundConfirmedMaster(txId, ctx);
 
         return new OperationSummary(
                 SuccessCode.TRANSFER_OK.name(),
