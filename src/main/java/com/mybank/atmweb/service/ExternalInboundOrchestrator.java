@@ -23,23 +23,8 @@ public class ExternalInboundOrchestrator {
 
     private final ExternalBankClient externalBankClient;
     private final TransactionCommandService txCmd;
-    private final AccountQueryService accountQueryService;
     private final TransactionRepository txRepo;
 
-    /**
-     *
-     * markInboundConfirmedMaster(txId)는 마스터 상태만 COMPLETED로 전이(레그/잔액은 건드리지 않음).
-     *
-     * 멱등은 마스터 UNIQ(idempotencyKey, operationType, master=true)와 예외 캐치 → summarizeExisting로 처리.
-     *
-     * 만약 외부 confirm이 실패하면 PENDING_CONFIRM로 두고 재시도/보정 정책을 운영(필요 시 리버설 레그).
-     * 원자성: 잔액 증가와 레그 생성이 항상 함께 일어나야 무결성 보장.
-     *
-     * 경합/재시도 내성: 마스터/레그/잔액을 한 트랜잭션에 묶으면 멱등 처리 단순화.
-     *
-     * 확실한 책임 분리: 내부 서버가 입금까지 확정하고, 외부 confirm은 마스터 상태 종결만.
-     *
-     */
     public OperationSummary inboundToMybank(OperationContext ctx) {
         ExAccWithdrawRes wres = externalBankClient.withdraw(ExAccWithdrawReq.fromTransfer(ctx));
         // 0) 실패 기록
