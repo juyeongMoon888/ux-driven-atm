@@ -185,12 +185,13 @@ public class TransactionCommandService {
                 errorCode));
     }
 
-    public void markAwaitingExternalConfirm(Long txId, String reason) {
-        /*Transactions m = txRepo.findByIdForUpdate(txId).orElseThrow(...);
+    @Transactional
+    public void markAwaitingExternalConfirm(Long txId, String reasonCode) {
+        Transactions m = txRepo.findMasterByIdForUpdate(txId)
+                .orElseThrow(() -> new CustomException(ErrorCode.TRANSACTION_NOT_FOUND));
         m.setTransactionStatus(TransactionStatus.PENDING_CONFIRM);
-        m.setFailureCode(reasonCode); // 선택: 최근 사유 저장
-        txRepo.save(m);*/
-
+        m.setFailureCode(reasonCode);
+        txRepo.save(m);
     }
 
     @Transactional
