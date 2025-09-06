@@ -66,12 +66,12 @@ public class ExternalInboundOrchestrator {
         // 3) 외부 confirm - 외부 confirm은 출금 레그 확정만, 마스터 전이는 MyBank 쪽에서 하세요.
         ExAccConfirmRes cres = externalBankClient.confirm(new ExAccConfirmReq(ctx.getFromBank(), exTxId));
         if (!cres.isComplete()) {
-            txCmd.markInboundPendingConfirm(txId); //실패
+            txCmd.markAwaitingExternalConfirm(txId, "CONFIRM_UNREACHABLE");
             return new OperationSummary("PENDING_CONFIRM", "external.confirm.pending", TransactionStatus.PENDING_CONFIRM, txId);
         }
 
         // 4) 우리 내부 confirm  마스터, leg 반영
-        txCmd.markInboundConfirmed(txId, after, ctx); //markInboundPendingConfirm
+        txCmd.markInboundConfirmed(txId, after, ctx);
 
         return new OperationSummary(
                 SuccessCode.TRANSFER_OK.name(),
