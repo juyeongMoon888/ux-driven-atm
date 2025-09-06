@@ -58,12 +58,12 @@ public class ExternalInboundOrchestrator {
         // 2) 우리 내부 입금
         Long txId;
         try {
-            txId = txCmd.createDepositApplied(ctx);
+            txId = txCmd.createDepositApplied(ctx); //마스터 ID
         } catch (DataIntegrityViolationException dup) {
             return summarizeExisting(ctx);
         }
 
-        // 3) 외부 confirm - 외부 confirm은 출금 레그 확정만, 마스터 전이는 MyBank 쪽에서 하세요.
+        // 3) 외부 confirm - 외부 confirm은 출금 레그 확정만, 마스터 전이는 MyBank
         ExAccConfirmRes cres = externalBankClient.confirm(new ExAccConfirmReq(ctx.getFromBank(), exTxId));
         if (!cres.isComplete()) {
             txCmd.markAwaitingExternalConfirm(txId, "CONFIRM_UNREACHABLE");
@@ -71,7 +71,7 @@ public class ExternalInboundOrchestrator {
         }
 
         // 4) 우리 내부 confirm  마스터, leg 반영
-        txCmd.markInboundConfirmed(txId, after, ctx);
+        txCmd.markInboundConfirmedMaster(txId, ctx);
 
         return new OperationSummary(
                 SuccessCode.TRANSFER_OK.name(),
