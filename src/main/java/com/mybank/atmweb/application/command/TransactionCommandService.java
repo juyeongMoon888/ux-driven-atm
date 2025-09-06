@@ -185,30 +185,19 @@ public class TransactionCommandService {
                 errorCode));
     }
 
-    public void markAwaitingExternalConfirm(Long txId) {
+    public void markAwaitingExternalConfirm(Long txId, String reason) {
+        /*Transactions m = txRepo.findByIdForUpdate(txId).orElseThrow(...);
+        m.setTransactionStatus(TransactionStatus.PENDING_CONFIRM);
+        m.setFailureCode(reasonCode); // 선택: 최근 사유 저장
+        txRepo.save(m);*/
 
     }
 
     @Transactional
-    public void markInboundConfirmed(Long txId, Long after, OperationContext ctx) {
-        //마스터 선삽입
-        Transactions newMaster = Transactions.builder()
-                .master(true)
-                .operationType(OperationType.TRANSFER)
-                .fromAccountNumber(ctx.getFromAccountNumber())
-                .toAccountNumber(ctx.getToAccountNumber())
-                .amount(ctx.getAmount())
-                .memo(ctx.getMemo())
-                .transactionStatus(TransactionStatus.COMPLETED)
-                .idempotencyKey(ctx.getIdempotencyKey())
-                .build();
-        txRepo.save(newMaster);
-
-        //leg 트랜잭션 완성
-        Transactions tx = txRepo.findByIdForUpdate(txId)
+    public void markInboundConfirmedMaster(Long txId) {
+        Transactions tx = txRepo.findMasterByIdForUpdate(txId)
                 .orElseThrow(() -> new CustomException(ErrorCode.TRANSACTION_NOT_FOUND));
 
-        tx.setBalanceAfter(after);
         tx.setTransactionStatus(TransactionStatus.COMPLETED);
         txRepo.save(tx);
     }
