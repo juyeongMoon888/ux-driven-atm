@@ -203,8 +203,30 @@ public class TransactionCommandService {
         txRepo.save(tx);
     }
 
+    @Transactional
+    public void markRelayFailed(OperationContext ctx, String reasonCode) {
+        Transactions m = Transactions.builder()
+                .master(true)
+                .operationType(OperationType.TRANSFER)
+                .fromBank(BankType.valueOf(ctx.getFromBank()))
+                .fromAccountNumber(ctx.getFromAccountNumber())
+                .toBank(ctx.getToBank())
+                .toAccountNumber(ctx.getToAccountNumber())
+                .amount(ctx.getAmount())
+                .transactionStatus(TransactionStatus.FAILED)
+                .failureCode(reasonCode)
+                .idempotencyKey(ctx.getIdempotencyKey())
+                .build();
+        txRepo.save(m);
+        txRepo.flush();
 
-    public void markRelayFailed(OperationContext ctx, String code) {
+        // 멱등키 종결
+        idemRepo.save(new Idempotency(
+                ctx.getIdempotencyKey(),
+                m.getId(),
+                LocalDateTime.now(),
+                TransactionStatus.FAILED,
+                reasonCode));
     }
 
     public void markRelayPendingConfirm(OperationContext ctx, Long exTxId) {
