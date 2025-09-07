@@ -56,7 +56,7 @@ public class TransactionCommandService {
                 .toAccountNumber(ctx.getToAccountNumber())
                 .amount(ctx.getAmount())
                 .memo(ctx.getMemo())
-                .transactionStatus(TransactionStatus.PENDING_WITHDRAW)
+                .transactionStatus(TransactionStatus.PENDING_EXTERNAL) //외부 입금 대기
                 .idempotencyKey(ctx.getIdempotencyKey())
                 .build();
         txRepo.save(newMaster);
@@ -80,12 +80,12 @@ public class TransactionCommandService {
                 .toBank(ctx.getToBank())
                 .fromAccountNumber(ctx.getFromAccountNumber())
                 .toAccountNumber(ctx.getToAccountNumber())
-                .transactionStatus(TransactionStatus.COMPLETED)
+                .transactionStatus(TransactionStatus.COMPLETED) //내부 출금 완료
                 .build();
         txRepo.save(withdrawLeg);
 
-        // master 상태 전이: PENDING_EXTERNAL (외부 입금 대기)
-        newMaster.setTransactionStatus(TransactionStatus.PENDING_EXTERNAL);
+        // master 상태 전이: PENDING_EXTERNAL (외부 승인 대기)
+        newMaster.setTransactionStatus(TransactionStatus.PENDING_CONFIRM);
         txRepo.save(newMaster);
 
         return newMaster.getId();
@@ -103,7 +103,7 @@ public class TransactionCommandService {
                 .toAccountNumber(ctx.getToAccountNumber())
                 .amount(ctx.getAmount())
                 .memo(ctx.getMemo())
-                .transactionStatus(TransactionStatus.PENDING_INTERNAL)
+                .transactionStatus(TransactionStatus.PENDING_INTERNAL) //내부 입금 대기
                 .idempotencyKey(ctx.getIdempotencyKey())
                 .build();
         txRepo.save(newMaster);
