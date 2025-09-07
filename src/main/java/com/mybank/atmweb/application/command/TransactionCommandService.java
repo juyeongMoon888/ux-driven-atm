@@ -67,7 +67,7 @@ public class TransactionCommandService {
         long before = account.getBalance();
         account.withdraw(ctx.getAmount());
 
-        // leg 생성/저장 (PENDING)
+        // leg 생성/저장 (COMPLETE)
         Transactions withdrawLeg = Transactions.builder()
                 .parent(newMaster)
                 .account(account)
@@ -80,7 +80,7 @@ public class TransactionCommandService {
                 .toBank(ctx.getToBank())
                 .fromAccountNumber(ctx.getFromAccountNumber())
                 .toAccountNumber(ctx.getToAccountNumber())
-                .transactionStatus(TransactionStatus.PENDING) // ❓COMPLETE로 해야하나
+                .transactionStatus(TransactionStatus.COMPLETED)
                 .build();
         txRepo.save(withdrawLeg);
 
