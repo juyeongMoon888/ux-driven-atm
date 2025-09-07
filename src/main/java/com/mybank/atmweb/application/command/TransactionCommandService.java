@@ -203,8 +203,8 @@ public class TransactionCommandService {
         txRepo.save(tx);
     }
 
-    public void markFailedBusiness(OperationContext ctx, String code) {
-        //외부 -> 외부인데.. 외부1차 출금때부터 실패한거임
+
+    public void markRelayFailed(OperationContext ctx, String code) {
     }
 
     public void markRelayPendingConfirm(OperationContext ctx, Long exTxId) {
