@@ -17,6 +17,7 @@ import java.time.LocalDateTime;
 @Getter @Setter
 public class Idempotency {
     @Id
+    @Column(name="idempotency_key")
     private String key; // 클라이언트가 준 UUID
 
     @Column(name = "tx_id")
