@@ -45,7 +45,8 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
     Optional<AccountStatus> findStatusByBankAndAccountNumber(@Param("bank") BankType bank,
                                                              @Param("accountNumber") String accountNumber);
 
-    Optional<Long> findIdByAccountNumber(String fromAccountNumber);
+    @Query("select a.id from Account a where a.accountNumber = :accountNumber")
+    Optional<Long> findIdByAccountNumber(@Param("accountNumber") String fromAccountNumber);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<Account> findByAccountNumber(String fromAccountNumber);
