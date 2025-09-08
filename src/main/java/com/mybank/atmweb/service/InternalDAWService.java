@@ -110,7 +110,7 @@ public class InternalDAWService {
                         .build()
         );
 
-        idemRepo.save(new Idempotency(ctx.getIdempotencyKey(), tx.getId(), tx.getCreatedAt()));
+        idemRepo.save(new Idempotency(ctx.getIdempotencyKey(), tx.getId(), tx.getCreatedAt(), TransactionStatus.COMPLETED, null));
 
         return new OperationSummary(
                 SuccessCode.WITHDRAW_OK.name(),
