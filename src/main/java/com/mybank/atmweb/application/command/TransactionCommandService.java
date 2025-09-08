@@ -234,7 +234,7 @@ public class TransactionCommandService {
     public void markRelayPendingConfirm(OperationContext ctx, Long exTxId) {
     }
 
-    public void markRelayCompleted(OperationContext ctx, Long exTxId) {
+    public void markRelayCompleted(OperationContext ctx, Long txId) {
     }
 }
 

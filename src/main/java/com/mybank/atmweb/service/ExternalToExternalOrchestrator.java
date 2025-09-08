@@ -24,18 +24,17 @@ public class ExternalToExternalOrchestrator {
     private final TransactionRepository txRepo;
 
     public OperationSummary relay(OperationContext ctx) {
-        //0 마스터 선삽입
-        Long txId;
+        // 0) 마스터 선삽입
+        Long txId; //마스터 ID
         try {
             txId = txCmd.createRelayMaster(ctx);
         } catch (DataIntegrityViolationException dup) {
             return summarizeExisting(ctx);
         }
 
-        //1. 출금 은행 A 승인
+        // 1) 출금 은행 A 승인
         ExAccWithdrawReq wreq = ExAccWithdrawReq.fromTransfer(ctx);
         ExAccWithdrawRes wres = externalBankClient.withdraw(wreq);
-
         if (!wres.isApproved()) {
             try {
                 txCmd.markRelayFailed(ctx, wres.getCode());
@@ -51,10 +50,9 @@ public class ExternalToExternalOrchestrator {
 
         Long exTxId = wres.getExTxId(); //외부 출금 성공 후 외부에서 생성된 id //1025
 
-        // 2. 입금 은행 B 처리
+        // 2) 입금 은행 B 처리
         ExAccDepositReq dreq = ExAccDepositReq.fromTransfer(ctx, exTxId);
         ExAccDepositRes dres = externalBankClient.deposit(dreq);
-
         if (!dres.isSuccess()) {
             //외부 서버에서 환불 로직
             externalBankClient.cancel(new ExAccCancelReq(ctx.getFromBank(), exTxId));
@@ -66,7 +64,7 @@ public class ExternalToExternalOrchestrator {
                     null);
         }
 
-        // 3. 출금 은행 A 최종 확정
+        // 3) 출금 은행 A 최종 확정
         ExAccConfirmRes cres = externalBankClient.confirm(new ExAccConfirmReq(ctx.getFromBank(), exTxId));
         if (!cres.isComplete()) {
             txCmd.markRelayPendingConfirm(ctx, exTxId);
@@ -88,7 +86,7 @@ public class ExternalToExternalOrchestrator {
                     null);
         }
 
-        txCmd.markRelayCompleted(ctx, exTxId);
+        txCmd.markRelayCompleted(ctx, txId); //최종 complete
         return new OperationSummary("EXT_TO_EXT_OK", "외부->외부 송금 성공", TransactionStatus.COMPLETED, null);
     }
 
