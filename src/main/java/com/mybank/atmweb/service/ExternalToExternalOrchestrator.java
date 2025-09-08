@@ -49,14 +49,14 @@ public class ExternalToExternalOrchestrator {
                     null);
         }
 
-        Long exTxId = wres.getExTxId(); //외부 출금 성공 후 외부에서 생성된 id //1025
+        Long exWithdrawTxId = wres.getExTxId();
 
         // 2) 입금 은행 B 처리
-        ExAccDepositReq dreq = ExAccDepositReq.fromTransfer(ctx, exTxId);
+        ExAccDepositReq dreq = ExAccDepositReq.fromTransfer(ctx, exWithdrawTxId);
         ExAccDepositRes dres = externalBankClient.deposit(dreq);
         if (!dres.isSuccess()) {
             //외부 서버에서 환불 로직
-            externalBankClient.cancel(new ExAccCancelReq(ctx.getFromBank(), exTxId));
+            externalBankClient.cancel(new ExAccCancelReq(ctx.getFromBank(), exWithdrawTxId));
             txCmd.markRelayFailed(ctx, dres.getCode());
             return new OperationSummary(
                     dres.getCode(),
@@ -65,9 +65,11 @@ public class ExternalToExternalOrchestrator {
                     null);
         }
 
+        Long exDepositTxId = dres.getExTxId();
+
         // 3) 출금 은행 A 최종 확정
         try {
-            externalBankClient.confirm(new ExAccConfirmReq(ctx.getFromBank(), exTxId));
+            externalBankClient.confirm(new ExAccConfirmReq(ctx.getFromBank(), exWithdrawTxId));
         } catch (Exception ex) {
             txCmd.markAwaitingExternalConfirm(txId, "CONFIRM_UNREACHABLE:" + ctx.getFromBank());
             return new OperationSummary(
@@ -79,7 +81,7 @@ public class ExternalToExternalOrchestrator {
 
         // 4. 입금 은행 B 최종 확정
         try {
-            externalBankClient.confirm(new ExAccConfirmReq(ctx.getToBank(), exTxId));
+            externalBankClient.confirm(new ExAccConfirmReq(ctx.getToBank(), exDepositTxId));
         } catch (Exception ex) {
             txCmd.markAwaitingExternalConfirm(txId, "CONFIRM_UNREACHABLE:" + ctx.getToBank());
             return new OperationSummary(
