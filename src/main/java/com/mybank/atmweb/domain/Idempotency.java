@@ -1,6 +1,7 @@
 package com.mybank.atmweb.domain;
 
 import com.mybank.atmweb.dto.TransactionStatus;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.transaction.Transactional;
@@ -17,6 +18,8 @@ import java.time.LocalDateTime;
 public class Idempotency {
     @Id
     private String key; // 클라이언트가 준 UUID
+
+    @Column(name = "tx_id")
     private Long txId; // 매핑된 거래 ID
     private LocalDateTime createdAt; //finalizedAt
     private TransactionStatus transactionStatus;
