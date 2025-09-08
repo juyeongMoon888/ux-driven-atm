@@ -5,7 +5,9 @@ import com.mybank.atmweb.dto.TransactionDetailSummaryDto;
 import com.mybank.atmweb.dto.TransactionSummaryDto;
 import com.mybank.atmweb.service.transfer.model.OperationType;
 import io.lettuce.core.dynamic.annotation.Param;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
@@ -48,7 +50,15 @@ public interface TransactionRepository extends JpaRepository<Transactions, Long>
 
     Optional<Transactions> findMasterByIdempotencyKey(String idempotencyKey);
 
-    boolean existsByIdempotencyAndOperationType(String idempotencyKey, OperationType operationType);
+    Optional<Transactions> findMasterByIdempotencyKeyAndOperationType(String idempotencyKey, OperationType operationType);
+
+    boolean existsByIdempotencyKeyAndOperationType(String idempotencyKey, OperationType operationType);
 
     Optional<Transactions> findByIdempotencyKey(String idempotencyKey);
+
+    Optional<Transactions> findMasterByIdempotencyKeyForUpdate(String idempotencyKey);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select t from Transactions t where t.id = :id and t.master = true")
+    Optional<Transactions> findMasterByIdForUpdate(@Param("id") Long id);
 }
