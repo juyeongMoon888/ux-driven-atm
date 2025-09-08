@@ -5,7 +5,9 @@ import com.mybank.atmweb.domain.AccountStatus;
 import com.mybank.atmweb.dto.AccountSummaryDto;
 import com.mybank.atmweb.dto.account.AccountOptionDto;
 import io.lettuce.core.dynamic.annotation.Param;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
@@ -45,6 +47,7 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
 
     Optional<Long> findIdByAccountNumber(String fromAccountNumber);
 
-
-    Optional<Account> findIdByAccountNumber(String fromAccountNumber);
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    Optional<Account> findByAccountNumber(String fromAccountNumber);
 }
+
