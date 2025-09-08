@@ -5,6 +5,7 @@ import com.mybank.atmweb.domain.transaction.Transactions;
 import com.mybank.atmweb.dto.*;
 import com.mybank.atmweb.external.client.ExternalBankClient;
 import com.mybank.atmweb.global.code.ErrorCode;
+import com.mybank.atmweb.global.code.PendingCode;
 import com.mybank.atmweb.global.code.SuccessCode;
 import com.mybank.atmweb.global.exception.user.CustomException;
 import com.mybank.atmweb.repository.TransactionRepository;
@@ -65,25 +66,27 @@ public class ExternalToExternalOrchestrator {
         }
 
         // 3) 출금 은행 A 최종 확정
-        ExAccConfirmRes cres = externalBankClient.confirm(new ExAccConfirmReq(ctx.getFromBank(), exTxId));
-        if (!cres.isComplete()) {
-            txCmd.markRelayPendingConfirm(ctx, exTxId);
+        try {
+            externalBankClient.confirm(new ExAccConfirmReq(ctx.getFromBank(), exTxId));
+        } catch (Exception ex) {
+            txCmd.markAwaitingExternalConfirm(txId, "CONFIRM_UNREACHABLE");
             return new OperationSummary(
-                    "PENDING_CONFIRM",
-                    "external.confirm.pending",
-                    TransactionStatus.PENDING,
-                    null);
+                    PendingCode.PENDING_CONFIRM.name(),
+                    PendingCode.PENDING_CONFIRM.getMessageKey(),
+                    TransactionStatus.PENDING_CONFIRM, txId
+            );
         }
 
         // 4. 입금 은행 B 최종 확정
-        ExAccConfirmRes cresB = externalBankClient.confirm(new ExAccConfirmReq(ctx.getToBank(), exTxId));
-        if (!cresB.isComplete()) {
-            txCmd.markRelayPendingConfirm(ctx, exTxId);
+        try {
+            externalBankClient.confirm(new ExAccConfirmReq(ctx.getToBank(), exTxId));
+        } catch (Exception ex) {
+            txCmd.markAwaitingExternalConfirm(txId, "CONFIRM_UNREACHABLE");
             return new OperationSummary(
-                    "PENDING_CONFIRM_B",
-                    "external.confirm.pending.B",
-                    TransactionStatus.PENDING,
-                    null);
+                    PendingCode.PENDING_CONFIRM.name(),
+                    PendingCode.PENDING_CONFIRM.getMessageKey(),
+                    TransactionStatus.PENDING_CONFIRM, txId
+            );
         }
 
         txCmd.markRelayCompleted(ctx, txId); //최종 complete
