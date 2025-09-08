@@ -1,6 +1,7 @@
 package com.mybank.atmweb.domain.account;
 
-import com.mybank.atmweb.dto.AccountStatus;
+import com.mybank.atmweb.domain.BankType;
+import com.mybank.atmweb.domain.AccountStatus;
 import com.mybank.atmweb.dto.AccountSummaryDto;
 import com.mybank.atmweb.dto.account.AccountOptionDto;
 import io.lettuce.core.dynamic.annotation.Param;
@@ -36,9 +37,14 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
     @Query("""
            select a.status
              from Account a
-            where a.bankType = :bank
+            where a.bank = :bank
               and a.accountNumber = :accountNumber
            """)
-    Optional<AccountStatus> findStatusByBankAndAccountNumber(@Param("bank") String bank,
+    Optional<AccountStatus> findStatusByBankAndAccountNumber(@Param("bank") BankType bank,
                                                              @Param("accountNumber") String accountNumber);
+
+    Optional<Long> findIdByAccountNumber(String fromAccountNumber);
+
+
+    Optional<Account> findIdByAccountNumber(String fromAccountNumber);
 }
