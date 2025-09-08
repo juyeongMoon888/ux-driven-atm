@@ -20,20 +20,19 @@ public class ExAccDepositReq {
     private String fromBank;
     private String fromAccountNumber;
 
-    public static ExAccDepositReq fromTransfer(OperationContext ctx, Long exTxId) {
+    public static ExAccDepositReq fromTransfer(OperationContext ctx) {
         return ExAccDepositReq.builder()
                 .toBank(ctx.getToBank())
                 .toAccountNumber(ctx.getToAccountNumber())
                 .amount(ctx.getAmount())
                 .memo(ctx.getMemo())
-                .exTxId(exTxId)
                 .idempotencyKey(ctx.getIdempotencyKey())
                 .fromBank(ctx.getFromBank())
                 .fromAccountNumber(ctx.getFromAccountNumber())
                 .build();
     }
 
-    public static ExAccDepositReq fromTransfer(OperationContext ctx) {
+    public static ExAccDepositReq fromDeposit(OperationContext ctx) {
         return ExAccDepositReq.builder()
                 .toBank(ctx.getToBank())
                 .toAccountNumber(ctx.getToAccountNumber())

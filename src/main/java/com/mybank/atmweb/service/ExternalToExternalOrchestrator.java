@@ -52,7 +52,7 @@ public class ExternalToExternalOrchestrator {
         Long exWithdrawTxId = wres.getExTxId();
 
         // 2) 입금 은행 B 처리
-        ExAccDepositReq dreq = ExAccDepositReq.fromTransfer(ctx, exWithdrawTxId);
+        ExAccDepositReq dreq = ExAccDepositReq.fromTransfer(ctx);
         ExAccDepositRes dres = externalBankClient.deposit(dreq);
         if (!dres.isSuccess()) {
             //외부 서버에서 환불 로직

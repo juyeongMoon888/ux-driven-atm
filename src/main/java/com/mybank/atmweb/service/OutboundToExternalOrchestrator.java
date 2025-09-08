@@ -39,7 +39,7 @@ public class OutboundToExternalOrchestrator {
         }
 
         // 2. 외부 은행 입금 호출
-        ExAccDepositReq dreq = ExAccDepositReq.fromTransfer(ctx, txId);
+        ExAccDepositReq dreq = ExAccDepositReq.fromTransfer(ctx);
         ExAccDepositRes dres;
         try {
             dres = externalBankClient.deposit(dreq);
@@ -47,11 +47,11 @@ public class OutboundToExternalOrchestrator {
             //예외 보상
             accountService.refundOutboundIfNeeded(ctx.getIdempotencyKey(), ctx.getFromAccountNumber(), ctx.getAmount(), "외부 입금 호출 중 예외");
             ExAccDepositRes fakeRes = ExAccDepositRes.fail("EXTERNAL_ERROR", "외부 입금 호출 중 예외");
-            txCmd.markOutboundFailed(txId, fakeRes);
+            txCmd.markOutboundFailed(txId);
             return new OperationSummary(fakeRes.getCode(), fakeRes.getMessage(), TransactionStatus.FAILED, txId);
         }
         if (!dres.isSuccess()) {
-            txCmd.markOutboundFailed(txId, dres);
+            txCmd.markOutboundFailed(txId);
             return new OperationSummary(dres.getCode(), dres.getMessage(), TransactionStatus.FAILED, txId);
         }
 
