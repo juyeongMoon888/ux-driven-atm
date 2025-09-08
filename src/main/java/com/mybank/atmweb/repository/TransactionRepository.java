@@ -49,15 +49,11 @@ public interface TransactionRepository extends JpaRepository<Transactions, Long>
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<Transactions> findById(Long txId);
 
-    Optional<Transactions> findMasterByIdempotencyKey(String idempotencyKey);
-
     Optional<Transactions> findMasterByIdempotencyKeyAndOperationType(String idempotencyKey, OperationType operationType);
 
     boolean existsByIdempotencyKeyAndOperationType(String idempotencyKey, OperationType operationType);
 
     Optional<Transactions> findByIdempotencyKey(String idempotencyKey);
-
-    Optional<Transactions> findMasterByIdempotencyKeyForUpdate(String idempotencyKey);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select t from Transactions t where t.id = :id and t.master = true")
