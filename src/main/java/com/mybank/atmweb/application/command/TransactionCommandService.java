@@ -231,6 +231,25 @@ public class TransactionCommandService {
                 reasonCode));
     }
 
+    public Long createRelayMaster(OperationContext ctx) {
+        // 마스터 선삽입
+        Transactions m = Transactions.builder()
+                .master(true)
+                .operationType(OperationType.TRANSFER)
+                .fromBank(BankType.valueOf(ctx.getFromBank()))
+                .fromAccountNumber(ctx.getFromAccountNumber())
+                .toBank(ctx.getToBank())
+                .toAccountNumber(ctx.getToAccountNumber())
+                .amount(ctx.getAmount())
+                .memo(ctx.getMemo())
+                .transactionStatus(TransactionStatus.PENDING_EXTERNAL)
+                .idempotencyKey(ctx.getIdempotencyKey())
+                .build();
+        txRepo.save(m);
+        txRepo.flush();
+        return m.getId();
+    }
+
     public void markRelayCompleted(OperationContext ctx, Long txId) {
     }
 }
