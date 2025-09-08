@@ -121,7 +121,7 @@ public class InternalTransferService {
         // 마스터 확정
         master.setTransactionStatus(TransactionStatus.COMPLETED);
         txRepo.save(master);
-        idemRepo.save(new Idempotency(master.getIdempotencyKey(), master.getId(), master.getCreatedAt()));
+        idemRepo.save(new Idempotency(master.getIdempotencyKey(), master.getId(), master.getCreatedAt(), TransactionStatus.COMPLETED, null));
 
         return new OperationSummary(
                 SuccessCode.TRANSFER_OK.name(),
