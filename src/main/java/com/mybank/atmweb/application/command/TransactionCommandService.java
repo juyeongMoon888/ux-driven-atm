@@ -65,7 +65,7 @@ public class TransactionCommandService {
 
         // leg 생성/저장 (COMPLETE)
         Transactions withdrawLeg = Transactions.builder()
-                .parent(newMaster)
+                .parentId(newMaster.getId())
                 .account(account)
                 .operationType(OperationType.WITHDRAW)
                 .amount(ctx.getAmount())
@@ -114,7 +114,7 @@ public class TransactionCommandService {
 
         //leg 생성/저장 COMPLETE
         Transactions depositLeg = Transactions.builder()
-                .parent(newMaster)
+                .parentId(newMaster.getId())
                 .account(to)
                 .operationType(OperationType.DEPOSIT)
                 .amount(ctx.getAmount())
