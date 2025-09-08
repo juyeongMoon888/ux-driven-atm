@@ -6,17 +6,13 @@ import com.mybank.atmweb.domain.BankType;
 import com.mybank.atmweb.domain.Idempotency;
 import com.mybank.atmweb.domain.account.Account;
 import com.mybank.atmweb.domain.transaction.Transactions;
-import com.mybank.atmweb.dto.ExAccDepositRes;
 import com.mybank.atmweb.dto.MemoUpdateRequest;
 import com.mybank.atmweb.dto.TransactionStatus;
 import com.mybank.atmweb.global.code.ErrorCode;
-import com.mybank.atmweb.global.code.SuccessCode;
 import com.mybank.atmweb.global.exception.user.CustomException;
 import com.mybank.atmweb.repository.IdempotencyRepository;
 import com.mybank.atmweb.repository.TransactionRepository;
-import com.mybank.atmweb.service.IdempotencyService;
 import com.mybank.atmweb.service.transfer.model.OperationContext;
-import com.mybank.atmweb.service.transfer.model.OperationSummary;
 import com.mybank.atmweb.service.transfer.model.OperationType;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -151,7 +147,7 @@ public class TransactionCommandService {
         }
     }
 
-    public void markOutboundCompleted(Long txId) {
+    public void markMasterCompleted(Long txId) {
         Transactions tx = txRepo.findByIdForUpdate(txId)
                 .orElseThrow(() -> new CustomException(ErrorCode.TRANSACTION_NOT_FOUND));
 
@@ -251,6 +247,11 @@ public class TransactionCommandService {
     }
 
     public void markRelayCompleted(OperationContext ctx, Long txId) {
+        Transactions tx = txRepo.findByIdForUpdate(txId)
+                .orElseThrow(() -> new CustomException(ErrorCode.TRANSACTION_NOT_FOUND));
+
+        tx.setTransactionStatus(TransactionStatus.COMPLETED);
+        txRepo.save(tx);
     }
 }
 
