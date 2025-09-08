@@ -31,7 +31,7 @@ public class InternalTransferService {
     public OperationSummary transferInternal(OperationContext ctx) {
         // 멱등성
         if (idemRepo.existsByKey(ctx.getIdempotencyKey())) {
-            Transactions existing = txRepo.findMasterByIdempotencyKeyAndOperationType(ctx.getIdempotencyKey(), ctx.getOperationType())
+            Transactions existing = txRepo.findMasterByIdempotencyKeyAndOperationType(ctx.getIdempotencyKey(), OperationType.TRANSFER)
                     .orElseThrow(() -> new CustomException(ErrorCode.IDEMPOTENCY_KEY_NOT_FOUND));
 
             return new OperationSummary(SuccessCode.TRANSFER_OK.name(), SuccessCode.TRANSFER_OK.getMessageKey(),
