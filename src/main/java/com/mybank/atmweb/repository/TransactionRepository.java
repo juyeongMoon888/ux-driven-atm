@@ -46,7 +46,8 @@ public interface TransactionRepository extends JpaRepository<Transactions, Long>
             @Param("userId") Long userId
     );
 
-    Optional<Transactions> findByIdForUpdate(Long txId);
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    Optional<Transactions> findById(Long txId);
 
     Optional<Transactions> findMasterByIdempotencyKey(String idempotencyKey);
 
