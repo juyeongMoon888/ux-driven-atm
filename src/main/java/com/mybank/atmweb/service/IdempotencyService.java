@@ -14,7 +14,7 @@ public class IdempotencyService {
 
     public Idempotency registerOrGet(String key) {
         return repo.findById(key)
-                .orElseGet(() -> repo.save(new Idempotency(key, null, LocalDateTime.now())));
+                .orElseGet(() -> repo.save(new Idempotency(key)));
     }
 
     //트랜잭션 생성 후
