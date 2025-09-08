@@ -1,16 +1,18 @@
 package com.mybank.atmweb.service;
 
 import com.mybank.atmweb.assembler.ExternalAccountRequestAssembler;
-import com.mybank.atmweb.domain.Account;
-import com.mybank.atmweb.domain.BankType;
-import com.mybank.atmweb.domain.User;
-import com.mybank.atmweb.domain.factory.AccountFactory;
+import com.mybank.atmweb.domain.account.Account;
+import com.mybank.atmweb.domain.user.User;
+import com.mybank.atmweb.domain.account.AccountFactory;
 import com.mybank.atmweb.dto.*;
+import com.mybank.atmweb.dto.account.request.AccountOpenRequestDto;
+import com.mybank.atmweb.dto.account.response.ExternalAccountOpenResponseDto;
 import com.mybank.atmweb.external.client.ExternalBankClient;
 import com.mybank.atmweb.global.code.ErrorCode;
 import com.mybank.atmweb.global.exception.user.CustomException;
-import com.mybank.atmweb.repository.AccountRepository;
+import com.mybank.atmweb.domain.account.AccountRepository;
 import com.mybank.atmweb.repository.UserRepository;
+import com.mybank.atmweb.service.transfer.model.OperationSummary;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -24,7 +26,7 @@ public class ExternalAccountService {
     private final UserRepository userRepository;
 
     @Transactional
-    public OperationSummary externalAccountOpen(AccountOpenRequestDto dto, Long userId) {
+    public AccountOpenSummary externalAccountOpen(AccountOpenRequestDto dto, Long userId) {
         // 요청 DTO 조립
         ExternalOpenAccountRequestDto request = assembler.toExternalRequest(dto, userId);
 
@@ -42,6 +44,6 @@ public class ExternalAccountService {
         //영속화
         accountRepository.save(externalAccount);
 
-        return new OperationSummary(response.getCode(), response.getMessage());
+        return new AccountOpenSummary(response.getCode(), response.getMessage());
     }
 }
