@@ -40,7 +40,7 @@ public class Transactions {
                         Long balanceBefore, Long balanceAfter, String memo, BankType fromBank,
                         String toBank, String fromAccountNumber, String toAccountNumber,
                         TransactionStatus transactionStatus, String idempotencyKey,
-                        boolean master, Transactions parent, String failureCode) {
+                        boolean master, long parentId, String failureCode) {
         this.account = account;
         this.operationType = operationType;
         this.amount = amount;
@@ -54,7 +54,7 @@ public class Transactions {
         this.transactionStatus = transactionStatus;
         this.idempotencyKey = idempotencyKey;
         this.master = master;
-        this.parent = parent;
+        this.parentId = parentId;
         this.failureCode = failureCode;
     }
 
@@ -79,7 +79,10 @@ public class Transactions {
     private String idempotencyKey;
 
     private boolean master;
-    private Transactions parent;
+
+    @Column(name="parent_id")
+    private Long parentId; //쓰기 쿼리용
+
     private String failureCode;
 
     public void setMemo(String memo) {
