@@ -89,7 +89,7 @@ public class InternalTransferService {
 
         txRepo.saveAll(List.of(
                 Transactions.builder()
-                        .parent(master)
+                        .parentId(master.getId())
                         .account(from)
                         .operationType(OperationType.WITHDRAW)
                         .amount(ctx.getAmount())
@@ -103,7 +103,7 @@ public class InternalTransferService {
                         .transactionStatus(TransactionStatus.COMPLETED)
                         .build(),
                 Transactions.builder()
-                        .parent(master)
+                        .parentId(master.getId())
                         .account(to)
                         .operationType(OperationType.DEPOSIT)
                         .amount(ctx.getAmount())
