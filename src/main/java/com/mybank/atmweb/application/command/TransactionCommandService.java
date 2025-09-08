@@ -245,13 +245,5 @@ public class TransactionCommandService {
         txRepo.flush();
         return m.getId();
     }
-
-    public void markRelayCompleted(OperationContext ctx, Long txId) {
-        Transactions tx = txRepo.findByIdForUpdate(txId)
-                .orElseThrow(() -> new CustomException(ErrorCode.TRANSACTION_NOT_FOUND));
-
-        tx.setTransactionStatus(TransactionStatus.COMPLETED);
-        txRepo.save(tx);
-    }
 }
 
