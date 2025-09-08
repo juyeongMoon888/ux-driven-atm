@@ -69,7 +69,7 @@ public class ExternalToExternalOrchestrator {
         try {
             externalBankClient.confirm(new ExAccConfirmReq(ctx.getFromBank(), exTxId));
         } catch (Exception ex) {
-            txCmd.markAwaitingExternalConfirm(txId, "CONFIRM_UNREACHABLE");
+            txCmd.markAwaitingExternalConfirm(txId, "CONFIRM_UNREACHABLE:" + ctx.getFromBank());
             return new OperationSummary(
                     PendingCode.PENDING_CONFIRM.name(),
                     PendingCode.PENDING_CONFIRM.getMessageKey(),
@@ -81,7 +81,7 @@ public class ExternalToExternalOrchestrator {
         try {
             externalBankClient.confirm(new ExAccConfirmReq(ctx.getToBank(), exTxId));
         } catch (Exception ex) {
-            txCmd.markAwaitingExternalConfirm(txId, "CONFIRM_UNREACHABLE");
+            txCmd.markAwaitingExternalConfirm(txId, "CONFIRM_UNREACHABLE:" + ctx.getToBank());
             return new OperationSummary(
                     PendingCode.PENDING_CONFIRM.name(),
                     PendingCode.PENDING_CONFIRM.getMessageKey(),
