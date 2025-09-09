@@ -76,8 +76,6 @@ public class InternalDAWService {
 
     public OperationSummary internalWithdraw(OperationContext ctx) {
 
-        log.info("🔥 internalWithdraw 진입");
-
         //멱등성
         if (idemRepo.existsByKey(ctx.getIdempotencyKey())) {
             Transactions existing = txRepo.findByIdempotencyKey(ctx.getIdempotencyKey())
