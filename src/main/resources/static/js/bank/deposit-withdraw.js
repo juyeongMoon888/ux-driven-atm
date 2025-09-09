@@ -33,6 +33,7 @@ async function handleDepositWithdrawSubmit(e) {
     let res, parsed;
     const type = document.querySelector('input[name="type"]:checked').value;
     const accountNumber = depositWithdrawForm.dataset.accountNumber;
+    const bank = depositWithdrawForm.dataset.bank;
     const amount = amountInput.value;
     const memo = memoInput.value;
     const idempotencyKey = crypto.randomUUID();
@@ -46,11 +47,11 @@ async function handleDepositWithdrawSubmit(e) {
             method: "POST",
             headers: {
               "Content-Type": "application/json"
+              "Idempotency-Key": idempotencyKey
             },
             credentials: "include",
-            Idempotency-Key: idempotencyKey,
             body: JSON.stringify({
-                type, accountNumber, amount, memo
+                bank, accountNumber, amount, memo
             })
         });
         parsed = await fetchJsonSafe(res);
