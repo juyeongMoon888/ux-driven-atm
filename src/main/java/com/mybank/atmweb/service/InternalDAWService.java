@@ -16,8 +16,10 @@ import com.mybank.atmweb.service.transfer.model.OperationContext;
 import com.mybank.atmweb.service.transfer.model.OperationSummary;
 import com.mybank.atmweb.service.transfer.model.OperationType;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class InternalDAWService {
@@ -74,6 +76,8 @@ public class InternalDAWService {
 
     public OperationSummary internalWithdraw(OperationContext ctx) {
 
+        log.info("🔥 internalWithdraw 진입");
+
         //멱등성
         if (idemRepo.existsByKey(ctx.getIdempotencyKey())) {
             Transactions existing = txRepo.findByIdempotencyKey(ctx.getIdempotencyKey())
@@ -82,7 +86,7 @@ public class InternalDAWService {
                     TransactionStatus.COMPLETED, existing.getId());
         }
 
-        Account acc = accRepo.findById(ctx.getUserId())
+        Account acc = accRepo.findByAccountNumberAndOwner_Id(ctx.getFromAccountNumber(), ctx.getUserId())
                 .orElseThrow(() -> new CustomException(ErrorCode.ACCOUNT_NOT_FOUND));
 
         //계좌 검증
