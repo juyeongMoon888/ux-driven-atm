@@ -30,6 +30,9 @@ function bindEvents() {
 async function handleDepositWithdrawSubmit(e) {
     e.preventDefault();
 
+    console.log("handleDepositWithdrawSubmit 진입");
+
+
     let res, parsed;
     const type = document.querySelector('input[name="type"]:checked').value;
     const accountNumber = depositWithdrawForm.dataset.accountNumber;
@@ -46,7 +49,7 @@ async function handleDepositWithdrawSubmit(e) {
         res = await fetchWithAuth(url, {
             method: "POST",
             headers: {
-              "Content-Type": "application/json"
+              "Content-Type": "application/json",
               "Idempotency-Key": idempotencyKey
             },
             credentials: "include",
