@@ -1,5 +1,6 @@
 package com.mybank.atmweb.service.transfer.model;
 
+import com.mybank.atmweb.domain.FlowContext;
 import com.mybank.atmweb.domain.Idempotency;
 import lombok.Builder;
 import lombok.Getter;
@@ -17,4 +18,5 @@ public class OperationContext {
     private final long amount;
     private final String memo;
     private final String idempotencyKey;
+    private final FlowContext flow;
 }
