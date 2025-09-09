@@ -2,6 +2,7 @@ package com.mybank.atmweb.service.transfer.model;
 
 import com.mybank.atmweb.application.query.AccountQueryService;
 import com.mybank.atmweb.domain.DawFlow;
+import com.mybank.atmweb.domain.FlowContext;
 import com.mybank.atmweb.domain.FlowType;
 import com.mybank.atmweb.domain.account.Account;
 import com.mybank.atmweb.dto.DepositRequestDto;
@@ -43,6 +44,7 @@ public class TransferRouter {
                 .memo(dto.getMemo())
                 .userId(userId)
                 .idempotencyKey(idempotencyService.registerOrGet(idempotencyKey).toString())
+                .flow(FlowContext.TRANSFER)
                 .build();
 
         // 플로우 판정
@@ -66,6 +68,7 @@ public class TransferRouter {
                 .amount(dto.getAmount())
                 .memo(dto.getMemo())
                 .idempotencyKey(idempotencyKey)
+                .flow(FlowContext.SIMPLE)
                 .build();
 
         DawFlow flow = decideFlow(dto.getBank());
@@ -84,6 +87,7 @@ public class TransferRouter {
                 .amount(dto.getAmount())
                 .memo(dto.getMemo())
                 .idempotencyKey(idempotencyKey)
+                .flow(FlowContext.SIMPLE)
                 .build();
 
         DawFlow flow = decideFlow(dto.getBank());
