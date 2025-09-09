@@ -1,5 +1,6 @@
 package com.mybank.atmweb.dto;
 
+import com.mybank.atmweb.domain.FlowContext;
 import com.mybank.atmweb.service.transfer.model.OperationContext;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,6 +20,7 @@ public class ExAccDepositReq {
     private String idempotencyKey;
     private String fromBank;
     private String fromAccountNumber;
+    private FlowContext flow;
 
     public static ExAccDepositReq fromTransfer(OperationContext ctx) {
         return ExAccDepositReq.builder()
@@ -29,6 +31,7 @@ public class ExAccDepositReq {
                 .idempotencyKey(ctx.getIdempotencyKey())
                 .fromBank(ctx.getFromBank())
                 .fromAccountNumber(ctx.getFromAccountNumber())
+                .flow(ctx.getFlow())
                 .build();
     }
 
@@ -39,6 +42,7 @@ public class ExAccDepositReq {
                 .amount(ctx.getAmount())
                 .memo(ctx.getMemo())
                 .idempotencyKey(ctx.getIdempotencyKey())
+                .flow(ctx.getFlow())
                 .build();
     }
 }
