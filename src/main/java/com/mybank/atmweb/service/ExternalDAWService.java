@@ -53,7 +53,25 @@ public class ExternalDAWService {
 
     public OperationSummary externalWithdraw(OperationContext ctx) {
         ExAccWithdrawReq wreq = ExAccWithdrawReq.fromWithdraw(ctx);
-        ExAccWithdrawRes wres = externalBankClient.withdraw(wreq);
+        ExAccWithdrawRes wres;
+
+        try {
+            wres = externalBankClient.withdraw(wreq);
+        } catch (HttpStatusCodeException ex) {
+            return new OperationSummary(
+                    "UPSTREAM_ERROR",
+                    "external.deposit.upstream_error",
+                    TransactionStatus.FAILED,
+                    null
+            );
+        } catch (Exception ex) {
+            return new OperationSummary(
+                    "UPSTREAM_UNREACHABLE",
+                    "external.deposit.unreachable",
+                    TransactionStatus.FAILED,
+                    null
+            );
+        }
 
         if (!wres.isApproved()) {
             return new OperationSummary(
