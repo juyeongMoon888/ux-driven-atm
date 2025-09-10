@@ -1,9 +1,6 @@
 package com.mybank.atmweb.service;
 
-import com.mybank.atmweb.dto.ExAccDepositReq;
-import com.mybank.atmweb.dto.ExAccDepositRes;
-import com.mybank.atmweb.dto.ExAccWithdrawReq;
-import com.mybank.atmweb.dto.ExAccWithdrawRes;
+import com.mybank.atmweb.dto.*;
 import com.mybank.atmweb.external.client.ExternalBankClient;
 import com.mybank.atmweb.service.transfer.model.OperationContext;
 import com.mybank.atmweb.service.transfer.model.OperationSummary;
@@ -18,8 +15,22 @@ public class ExternalDAWService {
 
     public OperationSummary externalDeposit(OperationContext ctx) {
         ExAccDepositReq dreq = ExAccDepositReq.fromDeposit(ctx);
+
         ExAccDepositRes dres = externalBankClient.deposit(dreq);
-        return new OperationSummary(dres.getCode(), dres.getMessage(), null, null);
+
+        if (!dres.isSuccess()) {
+            return new OperationSummary(
+              dres.getCode(),
+              dres.getMessage(),
+              TransactionStatus.FAILED,
+              null
+            );
+        }
+        return new OperationSummary(
+                dres.getCode(),
+                dres.getMessage(),
+                TransactionStatus.COMPLETED,
+                null);
     }
 
     public OperationSummary externalWithdraw(OperationContext ctx) {
