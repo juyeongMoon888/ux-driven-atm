@@ -38,7 +38,7 @@ public class InternalDAWService {
                     TransactionStatus.COMPLETED, existing.getId());
         }
 
-        Account acc = accRepo.findById(ctx.getUserId())
+        Account acc = accRepo.findByAccountNumberAndOwner_Id(ctx.getToAccountNumber(), ctx.getUserId())
                 .orElseThrow(() -> new CustomException(ErrorCode.ACCOUNT_NOT_FOUND));
 
         //계좌 검증
