@@ -83,6 +83,13 @@ public class Transactions {
     @Column(name="parent_id")
     private Long parentId; //쓰기 쿼리용
 
+    @Column(name="external_tx_id", length = 64)
+    private String externalTxId;
+
+    @Column(name="external_bank")
+    @Enumerated(EnumType.STRING)
+    private BankType externalBank;
+
     private String failureCode;
 
     public void setMemo(String memo) {
