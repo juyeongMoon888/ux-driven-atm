@@ -6,6 +6,7 @@ import com.mybank.atmweb.service.transfer.model.OperationContext;
 import com.mybank.atmweb.service.transfer.model.OperationSummary;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpStatusCodeException;
 
 @Service
 @RequiredArgsConstructor
@@ -16,7 +17,24 @@ public class ExternalDAWService {
     public OperationSummary externalDeposit(OperationContext ctx) {
         ExAccDepositReq dreq = ExAccDepositReq.fromDeposit(ctx);
 
-        ExAccDepositRes dres = externalBankClient.deposit(dreq);
+        ExAccDepositRes dres;
+        try {
+            dres = externalBankClient.deposit(dreq);
+        } catch (HttpStatusCodeException ex) {
+            return new OperationSummary(
+                    "UPSTREAM_ERROR",
+                    "external.deposit.upstream_error",
+                    TransactionStatus.FAILED,
+                    null
+            );
+        } catch (Exception ex) {
+            return new OperationSummary(
+                    "UPSTREAM_UNREACHABLE",
+                    "external.deposit.unreachable",
+                    TransactionStatus.FAILED,
+                    null
+            );
+        }
 
         if (!dres.isSuccess()) {
             return new OperationSummary(
