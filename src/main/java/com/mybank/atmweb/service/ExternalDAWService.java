@@ -60,14 +60,14 @@ public class ExternalDAWService {
         } catch (HttpStatusCodeException ex) {
             return new OperationSummary(
                     "UPSTREAM_ERROR",
-                    "external.deposit.upstream_error",
+                    "external.withdraw.upstream_error",
                     TransactionStatus.FAILED,
                     null
             );
         } catch (Exception ex) {
             return new OperationSummary(
                     "UPSTREAM_UNREACHABLE",
-                    "external.deposit.unreachable",
+                    "external.withdraw.unreachable",
                     TransactionStatus.FAILED,
                     null
             );
