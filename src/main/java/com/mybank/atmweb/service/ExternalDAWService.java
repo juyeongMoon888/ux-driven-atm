@@ -54,6 +54,18 @@ public class ExternalDAWService {
     public OperationSummary externalWithdraw(OperationContext ctx) {
         ExAccWithdrawReq wreq = ExAccWithdrawReq.fromWithdraw(ctx);
         ExAccWithdrawRes wres = externalBankClient.withdraw(wreq);
-        return new OperationSummary(wres.getCode(), wres.getMessage(), null, null);
+
+        if (!wres.isApproved()) {
+            return new OperationSummary(
+                    wres.getCode(),
+                    wres.getMessage(),
+                    TransactionStatus.FAILED,
+                    null);
+        }
+        return new OperationSummary(
+                wres.getCode(),
+                wres.getMessage(),
+                TransactionStatus.COMPLETED,
+                null);
     }
 }
