@@ -43,6 +43,7 @@ public class ExternalDAWService {
 
         ExAccDepositReq dreq = ExAccDepositReq.fromDeposit(ctx);
 
+        // 1) 외부 입금 요청
         ExAccDepositRes dres;
         try {
             dres = externalBankClient.deposit(dreq);
@@ -61,7 +62,6 @@ public class ExternalDAWService {
                     null
             );
         }
-
         if (!dres.isSuccess()) {
             return new OperationSummary(
               dres.getCode(),
@@ -70,6 +70,10 @@ public class ExternalDAWService {
               null
             );
         }
+
+        // 2) 외부 입금 계좌 잠금 조회
+        Account acc = accRepo.findByAccountNumberAndOwner_Id(ctx.getToAccountNumber(), ctx.getUserId())
+                .orElseThrow(() -> new CustomException(ErrorCode.ACCOUNT_NOT_FOUND));
 
         return new OperationSummary(
                 dres.getCode(),
