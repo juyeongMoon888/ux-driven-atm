@@ -1,9 +1,20 @@
 package com.mybank.atmweb.service;
 
+import com.mybank.atmweb.domain.BankType;
+import com.mybank.atmweb.domain.Idempotency;
+import com.mybank.atmweb.domain.account.Account;
+import com.mybank.atmweb.domain.account.AccountRepository;
+import com.mybank.atmweb.domain.transaction.Transactions;
 import com.mybank.atmweb.dto.*;
 import com.mybank.atmweb.external.client.ExternalBankClient;
+import com.mybank.atmweb.global.code.ErrorCode;
+import com.mybank.atmweb.global.code.SuccessCode;
+import com.mybank.atmweb.global.exception.user.CustomException;
+import com.mybank.atmweb.repository.IdempotencyRepository;
+import com.mybank.atmweb.repository.TransactionRepository;
 import com.mybank.atmweb.service.transfer.model.OperationContext;
 import com.mybank.atmweb.service.transfer.model.OperationSummary;
+import com.mybank.atmweb.service.transfer.model.OperationType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpStatusCodeException;
@@ -13,8 +24,23 @@ import org.springframework.web.client.HttpStatusCodeException;
 public class ExternalDAWService {
 
     private final ExternalBankClient externalBankClient;
+    private final TransactionRepository txRepo;
+    private final AccountRepository accRepo;
+    private final IdempotencyRepository idemRepo;
 
     public OperationSummary externalDeposit(OperationContext ctx) {
+        // 0) 멱등키 선확인
+        if (idemRepo.existsByKey(ctx.getIdempotencyKey())) {
+            Transactions existing = txRepo.findByIdempotencyKeyAndOperationType(ctx.getIdempotencyKey(), OperationType.DEPOSIT)
+                    .orElseThrow(() -> new CustomException(ErrorCode.IDEMPOTENCY_KEY_NOT_FOUND));
+
+            return new OperationSummary(
+                    SuccessCode.TRANSFER_OK.name(),
+                    SuccessCode.TRANSFER_OK.getMessageKey(),
+                    TransactionStatus.COMPLETED,
+                    existing.getId());
+        }
+
         ExAccDepositReq dreq = ExAccDepositReq.fromDeposit(ctx);
 
         ExAccDepositRes dres;
@@ -44,6 +70,7 @@ public class ExternalDAWService {
               null
             );
         }
+
         return new OperationSummary(
                 dres.getCode(),
                 dres.getMessage(),
