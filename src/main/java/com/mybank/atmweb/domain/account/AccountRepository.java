@@ -24,8 +24,8 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
             """)
     List<AccountSummaryDto> findSummariesByOwnerId(@Param("userId") Long userId);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<Account> findByAccountNumberAndOwner_Id(String accountNumber, Long userId);
-
 
     @Query("""
             select new com.mybank.atmweb.dto.account.AccountOptionDto(
