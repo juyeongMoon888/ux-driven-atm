@@ -111,6 +111,17 @@ public class ExternalDAWService {
     }
 
     public OperationSummary externalWithdraw(OperationContext ctx) {
+        // 0) 멱등키 선확인
+        if (idemRepo.existsByKey(ctx.getIdempotencyKey())) {
+            Transactions existing = txRepo.findByIdempotencyKeyAndOperationType(ctx.getIdempotencyKey(), OperationType.WITHDRAW)
+                    .orElseThrow(() -> new CustomException(ErrorCode.IDEMPOTENCY_KEY_NOT_FOUND));
+
+            return new OperationSummary(
+                    SuccessCode.WITHDRAW_OK.name(),
+                    SuccessCode.WITHDRAW_OK.getMessageKey(),
+                    TransactionStatus.COMPLETED,
+                    existing.getId());
+        }
 
         ExAccWithdrawReq wreq = ExAccWithdrawReq.fromWithdraw(ctx);
         ExAccWithdrawRes wres;
