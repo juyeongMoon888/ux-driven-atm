@@ -36,8 +36,8 @@ public class ExAccWithdrawReq {
 
     public static ExAccWithdrawReq fromWithdraw(OperationContext ctx) {
         return ExAccWithdrawReq.builder()
-                .fromBank(ctx.getToBank())
-                .fromAccountNumber(ctx.getToAccountNumber())
+                .fromBank(ctx.getFromBank())
+                .fromAccountNumber(ctx.getFromAccountNumber())
                 .amount(ctx.getAmount())
                 .memo(ctx.getMemo())
                 .idempotencyKey(ctx.getIdempotencyKey())
