@@ -124,8 +124,9 @@ public class ExternalDAWService {
         }
 
         ExAccWithdrawReq wreq = ExAccWithdrawReq.fromWithdraw(ctx);
-        ExAccWithdrawRes wres;
 
+        // 1) 외부 출금 요청
+        ExAccWithdrawRes wres;
         try {
             wres = externalBankClient.withdraw(wreq);
         } catch (HttpStatusCodeException ex) {
@@ -143,7 +144,6 @@ public class ExternalDAWService {
                     null
             );
         }
-
         if (!wres.isApproved()) {
             return new OperationSummary(
                     wres.getCode(),
@@ -151,6 +151,33 @@ public class ExternalDAWService {
                     TransactionStatus.FAILED,
                     null);
         }
+
+        // 2) 외부 출금 계좌 잠금 조회
+        Account acc = accRepo.findByAccountNumberAndOwner_Id(ctx.getFromAccountNumber(), ctx.getUserId())
+                .orElseThrow(() -> new CustomException(ErrorCode.ACCOUNT_NOT_FOUND));
+
+        // 3) 출금 적용
+        long before = acc.getBalance();
+        acc.withdraw(ctx.getAmount());
+
+        // 4) 트랜잭션 적용
+        Transactions tx = txRepo.save(
+                Transactions.builder()
+                        .account(acc)
+                        .operationType(OperationType.WITHDRAW)
+                        .amount(ctx.getAmount())
+                        .balanceBefore(before)
+                        .balanceAfter(acc.getBalance())
+                        .memo(ctx.getMemo())
+                        .toAccountNumber(ctx.getFromAccountNumber())
+                        .toBank(ctx.getToBank())
+                        .transactionStatus(TransactionStatus.COMPLETED)
+                        .idempotencyKey(ctx.getIdempotencyKey())
+                        .externalTxId(wres.getExTxId())
+                        .externalBank(BankType.valueOf(wres.getExternalBank()))
+                        .build()
+        );
+
         return new OperationSummary(
                 wres.getCode(),
                 wres.getMessage(),
