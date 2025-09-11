@@ -38,8 +38,8 @@ public class ExternalDAWService {
                     .orElseThrow(() -> new CustomException(ErrorCode.IDEMPOTENCY_KEY_NOT_FOUND));
 
             return new OperationSummary(
-                    SuccessCode.TRANSFER_OK.name(),
-                    SuccessCode.TRANSFER_OK.getMessageKey(),
+                    SuccessCode.DEPOSIT_OK.name(),
+                    SuccessCode.DEPOSIT_OK.getMessageKey(),
                     TransactionStatus.COMPLETED,
                     existing.getId());
         }
@@ -99,7 +99,6 @@ public class ExternalDAWService {
                         .externalBank(BankType.valueOf(dres.getExternalBank()))
                         .build()
         );
-        log.info("🔥 tx.getId={}", tx.getId());
 
         idemRepo.save(new Idempotency(ctx.getIdempotencyKey(), tx.getId(), tx.getCreatedAt(), TransactionStatus.COMPLETED, null));
 
@@ -112,6 +111,7 @@ public class ExternalDAWService {
     }
 
     public OperationSummary externalWithdraw(OperationContext ctx) {
+
         ExAccWithdrawReq wreq = ExAccWithdrawReq.fromWithdraw(ctx);
         ExAccWithdrawRes wres;
 
