@@ -12,4 +12,5 @@ public class ExAccWithdrawRes {
     private String code;        // 결과 코드 (예: EX_WITHDRAW_OK, EX_WITHDRAW_FAIL)
     private String message;     // 결과 메시지
     private String exTxId;        // 외부은행 트랜잭션 ID
+    private String externalBank;
 }
