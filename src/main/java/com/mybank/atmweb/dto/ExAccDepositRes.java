@@ -13,6 +13,7 @@ public class ExAccDepositRes {
     private String code;
     private String message;
     private String exTxId; // withdraw 단계에서 받은 exTxId
+    private String externalBank;
 
     public static ExAccDepositRes fail(String code, String message) {
         ExAccDepositRes res = new ExAccDepositRes();
