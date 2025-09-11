@@ -23,7 +23,6 @@ import org.springframework.web.client.HttpStatusCodeException;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class ExternalDAWService {
 
     private final ExternalBankClient externalBankClient;
@@ -31,6 +30,7 @@ public class ExternalDAWService {
     private final AccountRepository accRepo;
     private final IdempotencyRepository idemRepo;
 
+    @Transactional
     public OperationSummary externalDeposit(OperationContext ctx) {
         // 0) 멱등키 선확인
         if (idemRepo.existsByKey(ctx.getIdempotencyKey())) {
@@ -99,6 +99,7 @@ public class ExternalDAWService {
                         .externalBank(BankType.valueOf(dres.getExternalBank()))
                         .build()
         );
+        log.info("🔥 tx.getId={}", tx.getId());
 
         idemRepo.save(new Idempotency(ctx.getIdempotencyKey(), tx.getId(), tx.getCreatedAt(), TransactionStatus.COMPLETED, null));
 
