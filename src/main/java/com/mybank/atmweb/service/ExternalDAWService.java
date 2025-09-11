@@ -75,6 +75,28 @@ public class ExternalDAWService {
         Account acc = accRepo.findByAccountNumberAndOwner_Id(ctx.getToAccountNumber(), ctx.getUserId())
                 .orElseThrow(() -> new CustomException(ErrorCode.ACCOUNT_NOT_FOUND));
 
+        // 3) 입금 적용
+        long before = acc.getBalance();
+        acc.deposit(ctx.getAmount());
+
+        // 4) 트랜잭션 적용
+        Transactions tx = txRepo.save(
+                Transactions.builder()
+                        .account(acc)
+                        .operationType(OperationType.DEPOSIT)
+                        .amount(ctx.getAmount())
+                        .balanceBefore(before)
+                        .balanceAfter(acc.getBalance())
+                        .memo(ctx.getMemo())
+                        .toAccountNumber(ctx.getToAccountNumber())
+                        .toBank(ctx.getToBank())
+                        .transactionStatus(TransactionStatus.COMPLETED)
+                        .idempotencyKey(ctx.getIdempotencyKey())
+                        .externalTxId(dres.getExTxId())
+                        .externalBank(BankType.valueOf(dres.getExternalBank()))
+                        .build()
+        );
+
         return new OperationSummary(
                 dres.getCode(),
                 dres.getMessage(),
