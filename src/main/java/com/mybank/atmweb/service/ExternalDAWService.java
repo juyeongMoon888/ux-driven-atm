@@ -15,12 +15,15 @@ import com.mybank.atmweb.repository.TransactionRepository;
 import com.mybank.atmweb.service.transfer.model.OperationContext;
 import com.mybank.atmweb.service.transfer.model.OperationSummary;
 import com.mybank.atmweb.service.transfer.model.OperationType;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpStatusCodeException;
-
+@Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class ExternalDAWService {
 
     private final ExternalBankClient externalBankClient;
@@ -96,6 +99,9 @@ public class ExternalDAWService {
                         .externalBank(BankType.valueOf(dres.getExternalBank()))
                         .build()
         );
+
+        idemRepo.save(new Idempotency(ctx.getIdempotencyKey(), tx.getId(), tx.getCreatedAt(), TransactionStatus.COMPLETED, null));
+
 
         return new OperationSummary(
                 dres.getCode(),
