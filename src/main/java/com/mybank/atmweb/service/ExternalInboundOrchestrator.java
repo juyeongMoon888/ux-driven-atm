@@ -7,6 +7,7 @@ import com.mybank.atmweb.domain.transaction.Transactions;
 import com.mybank.atmweb.dto.*;
 import com.mybank.atmweb.external.client.ExternalBankClient;
 import com.mybank.atmweb.global.code.ErrorCode;
+import com.mybank.atmweb.global.code.PendingCode;
 import com.mybank.atmweb.global.code.SuccessCode;
 import com.mybank.atmweb.global.exception.user.CustomException;
 import com.mybank.atmweb.repository.TransactionRepository;
@@ -27,23 +28,22 @@ public class ExternalInboundOrchestrator {
 
     public OperationSummary inboundToMybank(OperationContext ctx) {
         ExAccWithdrawRes wres = externalBankClient.withdraw(ExAccWithdrawReq.fromTransfer(ctx));
-        // 0) 실패 기록
+        // 1) 실패 기록
         if (!wres.isApproved()) {
             try {
                 txCmd.markInboundFailed(ctx, wres.getCode());
             } catch (DataIntegrityViolationException dup) {
                 return summarizeExisting(ctx);
             }
-
             return new OperationSummary(wres.getCode(), wres.getMessage(), TransactionStatus.FAILED, null);
         }
 
-        Long exTxId = wres.getExTxId(); // 외부 출금 성공 후 외부에 생성된 txId
+        String exTxId = wres.getExTxId(); // 외부 출금 성공 후 외부에 생성된 txId
 
         // 2) 우리 내부 입금
-        Long txId;
+        Long txId; //마스터 ID
         try {
-            txId = txCmd.createDepositApplied(ctx); //마스터 ID
+            txId = txCmd.createDepositApplied(ctx);
         } catch (DataIntegrityViolationException dup) {
             return summarizeExisting(ctx);
         }
@@ -55,8 +55,8 @@ public class ExternalInboundOrchestrator {
             txCmd.markInboundConfirmedMaster(txId);
         } catch (Exception ex) { //도메인 오류
             txCmd.markAwaitingExternalConfirm(txId, "CONFIRM_UNREACHABLE");
-            return new OperationSummary("PENDING_CONFIRM",
-                    "external.confirm.pending",
+            return new OperationSummary(PendingCode.PENDING_CONFIRM.name(),
+                    PendingCode.PENDING_CONFIRM.getMessageKey(),
                     TransactionStatus.PENDING_CONFIRM,
                     txId);
         }
