@@ -110,6 +110,7 @@ public class ExternalDAWService {
                 null);
     }
 
+    @Transactional
     public OperationSummary externalWithdraw(OperationContext ctx) {
         // 0) 멱등키 선확인
         if (idemRepo.existsByKey(ctx.getIdempotencyKey())) {
