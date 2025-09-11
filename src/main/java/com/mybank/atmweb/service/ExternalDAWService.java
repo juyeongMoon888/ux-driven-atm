@@ -178,6 +178,8 @@ public class ExternalDAWService {
                         .build()
         );
 
+        idemRepo.save(new Idempotency(ctx.getIdempotencyKey(), tx.getId(), tx.getCreatedAt(), TransactionStatus.COMPLETED, null));
+
         return new OperationSummary(
                 wres.getCode(),
                 wres.getMessage(),
